@@ -41,8 +41,9 @@ IF : 'if' ;
 ELSE : 'else' ;
 COMMA : ',' ;
 NEW : 'new' ;
-BOOLEAN : 'boolean' ;
+BOOLEAN : 'booleann' ;
 STRING : 'String' ;
+
 
 
 
@@ -57,46 +58,52 @@ program
 
 
 importDecl
-    : IMPORT value+=ID (value+='.' value+=ID)* SEMI #Import
+    : IMPORT value+=ID ('.' value+=ID)* SEMI #Import
     ;
 
 classDecl
     : CLASS name=ID ('extends' parent=ID)?
         LCURLY
         varDecl*
+        mainMethodDecl*
         methodDecl*
+        mainMethodDecl*
         RCURLY
     ;
 
 varDecl
     : type name=ID SEMI
+    | type name=ID '[' ']' SEMI
+    | type name=ID EQUALS expr SEMI
     ;
 
 type
-    : type '[' ']'
-    | name= INT
-    | name= STRING
-    | name= INT '...'
-    | name= BOOLEAN
-    | name= ID
+    : type '[' ']'    #ArrayType
+    | name= INT       #VarType
+    | name= STRING    #VarType
+    | name= INT '...' #VarType
+    | name= BOOLEAN   #VarType
+    | name= ID        #VarType
+    | name= VOID      #VarType
 
 
     ;
 
 mainMethodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID MAIN LPAREN 'String' '['']' name=ID RPAREN LCURLY stmt* RCURLY
+     STATIC VOID MAIN LPAREN 'String' '['']' name=ID RPAREN LCURLY (varDecl | stmt)* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
+    STATIC?
     type name=ID
-    LPAREN param RPAREN
-    LCURLY (varDecl |stmt)* RCURLY
+    LPAREN param* RPAREN
+    LCURLY (varDecl | stmt)* RCURLY
     ;
 
 param
-    : type name=ID (COMMA param)*
+    : type name=ID (COMMA param)* #Params
     ;
 
 stmt
