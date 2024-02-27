@@ -38,10 +38,13 @@ public class JmmSymbolTableBuilder {
 
         classDecl.getChildren(METHOD_DECL).stream()
                 .forEach(method -> {
-                    if (method.getChildren("VarType").size()>0){
-                        map.put(method.get("name"), new Type(method.getChildren("VarType").get(0).get("name"), false));
+                    if(method.getChildren("Type").size()>0){
+
+                        if (method.getChildren("Type").get(0).getChildren("Type").size()>0){
+                            map.put(method.get("name"), new Type(method.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true));
                     }else {
-                        map.put(method.get("name"), new Type(method.getChildren("ArrayType").get(0).getJmmChild(0).get("name"), true));
+                        map.put(method.get("name"), new Type(method.getChildren("Type").get(0).get("name"), false));
+                    }
                     }
 
                 });
@@ -135,13 +138,15 @@ public class JmmSymbolTableBuilder {
         classDecl.getChildren(VAR_DECL).stream()
                 .forEach(varDecl -> {
 
-                    Type type;
-                    if (varDecl.getChildren("VarType").size()>0){
-                        type = new Type(varDecl.getChildren("VarType").get(0).get("name"),false);
-                    }else{
-                        type = new Type(varDecl.getChildren("ArrayType").get(0).getJmmChild(0).get("name"),true);
+                    Type type = new Type("Typeee", false);
+                    if(varDecl.getChildren("Type").size()>0) {
+                        // in case of an array
+                        if (varDecl.getChildren("Type").get(0).getChildren("Type").size() > 0) {
+                            type = new Type(varDecl.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
+                        } else {
+                            type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
+                        }
                     }
-
                     symbols.add(new Symbol(type ,varDecl.get("name")));
 
 
@@ -154,7 +159,7 @@ public class JmmSymbolTableBuilder {
         var imports = new ArrayList<String>();
         classDecl.getChildren("ImportDecl").stream()
                 .forEach(importDecl -> {
-                    
+
                     imports.add(importDecl.get("name"));
                 });
 

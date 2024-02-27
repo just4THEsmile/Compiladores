@@ -78,13 +78,13 @@ varDecl
     ;
 
 type
-    : type '[' ']'    #ArrayType
-    | name= INT       #VarType
-    | name= STRING    #VarType
-    | name= INT '...' #VarType
-    | name= BOOLEAN   #VarType
-    | name= ID        #VarType
-    | name= VOID      #VarType
+    : type '[' ']'
+    | name= INT
+    | name= STRING
+    | name= INT '...'
+    | name= BOOLEAN
+    | name= ID
+    | name= VOID
 
 
     ;
