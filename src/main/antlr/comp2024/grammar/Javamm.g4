@@ -85,8 +85,6 @@ type
     | name= BOOLEAN
     | name= ID
     | name= VOID
-
-
     ;
 
 mainMethodDecl locals[boolean isPublic=false]
@@ -98,12 +96,16 @@ methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
     STATIC?
     type name=ID
-    LPAREN param* RPAREN
+    LPAREN paramlist* RPAREN
     LCURLY (varDecl | stmt)* RCURLY
     ;
 
+paramlist
+    : param (COMMA param)*
+    ;
+
 param
-    : type name=ID (COMMA param)* #Params
+    : type name=ID
     ;
 
 stmt

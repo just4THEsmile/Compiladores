@@ -33,7 +33,6 @@ public class JmmSymbolTableBuilder {
     }
 
     private static Map<String, Type> buildReturnTypes(JmmNode classDecl) {
-        // TODO: Simple implementation that needs to be expanded
 
         Map<String, Type> map = new HashMap<>();
 
@@ -63,30 +62,26 @@ public class JmmSymbolTableBuilder {
 
         classDecl.getChildren(METHOD_DECL).stream()
                 .forEach(method ->
-                        {   List<Symbol> symbols = new ArrayList<Symbol>();
-                            if (method.getChildren().size()>=2) {
-                                JmmNode param = method.getJmmChild(1);
-                                if (param.getKind().equals("Params")) {
-                                    Type type = new Type("Typeee", false);
-                                    if (method.getJmmChild(0).getChildren().size()>0) {
-                                        type = new Type(method.getJmmChild(0).getJmmChild(0).get("name"), false);
-                                    }else{
-                                        type = new Type(method.getJmmChild(0).get("name"), false);
-                                    }
+                            {   List<Symbol> symbols = new ArrayList<Symbol>();
+                                if(method.getChildren("Paramlist").size()>0) {
+                                    method.getChildren("Paramlist").get(0).getChildren("Param").stream()
+                                            .forEach(param -> {
+                                                Type type = new Type(null, false);
+                                                // in case of an array
+                                                if (param.getChildren("Type").get(0).getChildren("Type").size() > 0) {
+                                                    type = new Type(param.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
+                                                } else {
+                                                    type = new Type(param.getChildren("Type").get(0).get("name"), false);
+                                                }
 
-                                    String kind = param.getKind();
-                                    while (kind.equals("Params") && param.getChildren().size()>=2) {
-                                        symbols.add(new Symbol(type, param.get("name")));
-                                        param = param.getJmmChild(1);
-                                        type = new Type(param.getJmmChild(0).get("name"), false);
-                                        kind = param.getKind();
-                                    }
-                                    type= new Type(param.getJmmChild(0).get("name"), false);
-                                    symbols.add(new Symbol(type, param.get("name")));
+                                                symbols.add(new Symbol(type, param.get("name")));
+                                            });
+
                                 }
-                            map.put(method.get("name"), symbols);
+                                    map.put(method.get("name"), symbols);
+
+
                             }
-                        }
                         );
         classDecl.getChildren("MainMethodDecl").stream()
                 .forEach(method -> map.put("main", Arrays.asList(new Symbol (new Type("String",true),"args"))));
