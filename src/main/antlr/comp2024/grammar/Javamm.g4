@@ -58,7 +58,7 @@ program
 
 
 importDecl
-    : IMPORT value+=ID ('.' value+=ID)* SEMI #Import
+    : IMPORT value+=ID ('.' value+=ID)* SEMI
     ;
 
 classDecl

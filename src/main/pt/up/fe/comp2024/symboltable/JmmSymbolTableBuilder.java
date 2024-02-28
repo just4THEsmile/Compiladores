@@ -16,8 +16,8 @@ public class JmmSymbolTableBuilder {
 
 
     public static JmmSymbolTable build(JmmNode root) {
-
-        var classDecl = root.getJmmChild(0);
+        var importsDecl = root.getChildren("ImportDecl");
+        var classDecl = root.getChildren("ClassDecl").get(0);
         SpecsCheck.checkArgument(CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
 
@@ -26,9 +26,10 @@ public class JmmSymbolTableBuilder {
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
         var fields = buildFields(classDecl);
-        var Imports =buildImports(classDecl);
+        var Imports =buildImports(importsDecl);
+        var parent = buildParent(classDecl);
 
-        return new JmmSymbolTable(className, methods, returnTypes, params,fields, locals,Imports);
+        return new JmmSymbolTable(className, methods, returnTypes, params,fields, locals,Imports,parent);
     }
 
     private static Map<String, Type> buildReturnTypes(JmmNode classDecl) {
@@ -155,16 +156,29 @@ public class JmmSymbolTableBuilder {
         return symbols;
     }
 
-    private static List<String> buildImports(JmmNode classDecl) {
+    private static List<String> buildImports(List<JmmNode> importsDecl) {
+        if(importsDecl.size()==0){
+            return new ArrayList<String>();
+        }
         var imports = new ArrayList<String>();
-        classDecl.getChildren("ImportDecl").stream()
-                .forEach(importDecl -> {
+        importsDecl.forEach(importDecl -> {
 
-                    imports.add(importDecl.get("name"));
+                    imports.add(importDecl.get("value"));
                 });
 
 
         return imports;
+    }
+
+    private static String buildParent(JmmNode classDecl) {
+        try {
+            var parent = classDecl.get("parent");
+            // Access the parent value
+            return parent;
+        } catch (NullPointerException e) {
+            // Handle the case where the parent value doesn't exist
+            return null; // or throw new IllegalStateException("Parent value is not present");
+        }
     }
 
 }
