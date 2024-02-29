@@ -20,7 +20,6 @@ public class TypeUtils {
      * @return
      */
     public static Type getExprType(JmmNode expr, SymbolTable table) {
-        // TODO: Simple implementation that needs to be expanded
 
         var kind = Kind.fromString(expr.getKind());
 
@@ -35,12 +34,12 @@ public class TypeUtils {
     }
 
     private static Type getBinExprType(JmmNode binaryExpr) {
-        // TODO: Simple implementation that needs to be expanded
 
         String operator = binaryExpr.get("op");
 
         return switch (operator) {
-            case "+", "*" -> new Type(INT_TYPE_NAME, false);
+            case "+", "*", "/","-" -> new Type(INT_TYPE_NAME, false);
+            case "&&", "<" -> new Type("boolean", false);
             default ->
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
         };
@@ -48,8 +47,27 @@ public class TypeUtils {
 
 
     private static Type getVarExprType(JmmNode varRefExpr, SymbolTable table) {
-        // TODO: Simple implementation that needs to be expanded
-        return new Type(INT_TYPE_NAME, false);
+        for (var symbol : table.getFields()) {
+            if (symbol.getName().equals(varRefExpr.get("name"))) {
+                return symbol.getType();
+            }
+        }
+        for(var method : table.getMethods()){
+            for(var param : table.getParameters(method)){
+                if(param.getName().equals(varRefExpr.get("name"))){
+                    return param.getType();
+                }
+            }
+        }
+        for (var method : table.getMethods()) {
+            for (var local : table.getLocalVariables(method)) {
+                if (local.getName().equals(varRefExpr.get("name"))) {
+                    return local.getType();
+                }
+            }
+
+        }
+        return new Type(null, false);
     }
 
 

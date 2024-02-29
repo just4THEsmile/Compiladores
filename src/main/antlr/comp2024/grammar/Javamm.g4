@@ -24,11 +24,7 @@ DIV : '/' ;
 NOT : '!' ;
 AND : '&&' ;
 SMALLER : '<' ;
-OR : '||' ;
-EQUAL : '==' ;
-SMALLEREQ : '<=' ;
-GREATER : '>' ;
-GREATEREQ : '>=' ;
+
 
 
 CLASS : 'class' ;
@@ -126,10 +122,10 @@ expr
     : NOT expr #NotExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
     | expr op= (ADD | SUB) expr #BinaryExpr //
+    | expr op= (AND|SMALLER) expr #BinaryExpr //
     | value=INTEGER #IntegerLiteral //
     | name=ID #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
-    | expr op=(AND|OR|EQUAL|GREATEREQ|SMALLEREQ) expr #BinaryOp //
     | expr op=SMALLER expr #BinaryExpr //
     | expr '.' ID LPAREN (expr)? (COMMA expr)* RPAREN #MemberCallExpr //
     | expr '.' 'length' #LengthExpr //

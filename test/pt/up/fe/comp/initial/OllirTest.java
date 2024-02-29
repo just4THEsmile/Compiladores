@@ -107,6 +107,7 @@ public class OllirTest {
 
         assertNotNull("Could not find method " + methodName, methodFoo);
 
+        var test = methodFoo.getInstructions();
         var binOpInst = methodFoo.getInstructions().stream()
                 .filter(inst -> inst instanceof AssignInstruction)
                 .map(instr -> (AssignInstruction) instr)
