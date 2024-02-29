@@ -96,7 +96,14 @@ public class JmmSymbolTableBuilder {
 
 
         classDecl.getChildren(METHOD_DECL).stream()
-                .forEach(method -> map.put(method.get("name"), getLocalsList(method)));
+                .forEach(method -> {
+
+
+                    map.put(method.get("name"), getLocalsList(method));
+
+
+
+                });
 
         return map;
     }
@@ -119,13 +126,23 @@ public class JmmSymbolTableBuilder {
 
 
     private static List<Symbol> getLocalsList(JmmNode methodDecl) {
-        // TODO: Simple implementation that needs to be expanded
-
-        var intType = new Type(TypeUtils.getIntTypeName(), false);
-
-        return methodDecl.getChildren(VAR_DECL).stream()
-                .map(varDecl -> new Symbol(intType, varDecl.get("name")))
-                .toList();
+        List<Symbol> locals= new ArrayList<Symbol>();
+        if(methodDecl.getChildren("VarDecl").size()>0){
+            methodDecl.getChildren("VarDecl").stream()
+                    .forEach(varDecl -> {
+                        Type type = new Type(null, false);
+                        if(varDecl.getChildren("Type").size()>0) {
+                            // in case of an array
+                            if (varDecl.getChildren("Type").get(0).getChildren("Type").size() > 0) {
+                                type = new Type(varDecl.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
+                            } else {
+                                type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
+                            }
+                        }
+                        locals.add(new Symbol(type ,varDecl.get("name")));
+                    });
+        }
+        return locals;
     }
     private static List<Symbol> buildFields(JmmNode classDecl) {
         var symbols = new ArrayList<Symbol>();
