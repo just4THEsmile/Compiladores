@@ -114,7 +114,7 @@ stmt
     | LCURLY stmt* RCURLY #BlockStmt //
     | expr SEMI #ExprStmt //
     | WHILE LPAREN expr RPAREN stmt #WhileStmt //
-    | IF LPAREN expr RPAREN stmt (ELSE stmt)? #IfStmt //
+    | IF LPAREN expr RPAREN stmt ELSE stmt #IfStmt //
     ;
 
 expr
