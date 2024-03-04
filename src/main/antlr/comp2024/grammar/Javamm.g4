@@ -95,12 +95,12 @@ methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
     STATIC?
     type name=ID
-    LPAREN paramlist* RPAREN
+    LPAREN paramlist? RPAREN
     LCURLY (varDecl | stmt)* RCURLY
     ;
 
 paramlist
-    : param (COMMA param)* (COMMA INT '...' val=ID)? //
+    : (param (COMMA param)* (COMMA INT '...' val=ID)?) //
     | (INT '...' val=ID)
     ;
 
@@ -126,7 +126,7 @@ expr
     | name=ID #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
     | expr op=SMALLER expr #BinaryExpr //
-    | expr '.' ID LPAREN (expr)? (COMMA expr)* RPAREN #MemberCallExpr //
+    | expr '.' ID LPAREN (expr (COMMA expr)*)? RPAREN #MemberCallExpr //
     | expr '.' 'length' #LengthExpr //
     | value=INTEGER #Integer //
     | expr '['expr']' #ArrayAccessExpr //
