@@ -48,7 +48,7 @@ STRING : 'String' ;
 
 
 INTEGER : [1-9][0-9]* |[0,9]  ;
-ID : [a-zA-Z_$][a-zA-Z0-9_$]*  | 'main';
+ID : [a-zA-Z_$][a-zA-Z0-9_$]*;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
