@@ -79,8 +79,16 @@ varDecl
     ;
 
 type
-    : type '[' ']'
+    : typeNotArray '[' ']'
     | name= INT
+    | name= STRING
+    | name= INT '...'
+    | name= BOOLEAN
+    | name= ID
+    | name= VOID
+    ;
+typeNotArray
+    : name= INT
     | name= STRING
     | name= INT '...'
     | name= BOOLEAN

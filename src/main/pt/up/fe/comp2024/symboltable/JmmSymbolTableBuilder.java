@@ -40,8 +40,8 @@ public class JmmSymbolTableBuilder {
                 .forEach(method -> {
                     if(method.getChildren("Type").size()>0){
 
-                        if (method.getChildren("Type").get(0).getChildren("Type").size()>0){
-                            map.put(method.get("name"), new Type(method.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true));
+                        if (method.getChildren("Type").get(0).getChildren("TypeNotArray").size()>0){
+                            map.put(method.get("name"), new Type(method.getChildren("Type").get(0).getChildren("TypeNotArray").get(0).get("name"), true));
                     }else {
                         map.put(method.get("name"), new Type(method.getChildren("Type").get(0).get("name"), false));
                     }
@@ -68,8 +68,8 @@ public class JmmSymbolTableBuilder {
                                             .forEach(param -> {
                                                 Type type = new Type(null, false);
                                                 // in case of an array
-                                                if (param.getChildren("Type").get(0).getChildren("Type").size() > 0) {
-                                                    type = new Type(param.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
+                                                if (param.getChildren("Type").get(0).getChildren("TypeNotArray").size() > 0) {
+                                                    type = new Type(param.getChildren("Type").get(0).getChildren("TypeNotArray").get(0).get("name"), true);
                                                 } else {
                                                     type = new Type(param.getChildren("Type").get(0).get("name"), false);
                                                 }
@@ -139,8 +139,8 @@ public class JmmSymbolTableBuilder {
                         Type type = new Type(null, false);
                         if(varDecl.getChildren("Type").size()>0) {
                             // in case of an array
-                            if (varDecl.getChildren("Type").get(0).getChildren("Type").size() > 0) {
-                                type = new Type(varDecl.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
+                            if (varDecl.getChildren("Type").get(0).getChildren("TypeNotArray").size() > 0) {
+                                type = new Type(varDecl.getChildren("Type").get(0).getChildren("TypeNotArray").get(0).get("name"), true);
                             } else {
                                 type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
                             }
@@ -160,7 +160,7 @@ public class JmmSymbolTableBuilder {
                     Type type = new Type("Typeee", false);
                     if(varDecl.getChildren("Type").size()>0) {
                         // in case of an array
-                        if (varDecl.getChildren("Type").get(0).getChildren("Type").size() > 0) {
+                        if (varDecl.getChildren("Type").get(0).getChildren("typeNotArray").size() > 0) {
                             type = new Type(varDecl.getChildren("Type").get(0).getChildren("Type").get(0).get("name"), true);
                         } else {
                             type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
