@@ -96,7 +96,7 @@ typeArray
 
 mainMethodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID 'main' LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY (varDecl | stmt)* RCURLY
+     STATIC VOID 'main' LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY  varDecl* stmt* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false]
@@ -104,7 +104,7 @@ methodDecl locals[boolean isPublic=false]
     STATIC?
     type name=ID
     LPAREN paramlist? RPAREN
-    LCURLY (varDecl | stmt)* RCURLY
+    LCURLY varDecl* stmt* RCURLY
     ;
 
 paramlist
