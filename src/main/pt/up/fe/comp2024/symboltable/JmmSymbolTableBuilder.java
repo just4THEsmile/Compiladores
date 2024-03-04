@@ -78,6 +78,11 @@ public class JmmSymbolTableBuilder {
                                             });
 
                                 }
+                                try{ // in case of varargs
+                                    symbols.add(new Symbol(new Type("int",false),method.getChildren("Paramlist").get(0).get("val")));
+                                }catch (Exception e){
+                                    //do nothing
+                                }
                                     map.put(method.get("name"), symbols);
 
 

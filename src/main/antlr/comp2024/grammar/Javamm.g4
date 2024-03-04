@@ -81,7 +81,6 @@ type
     : type '[' ']'
     | name= INT
     | name= STRING
-    | name= INT '...'
     | name= BOOLEAN
     | name= ID
     | name= VOID
@@ -101,7 +100,8 @@ methodDecl locals[boolean isPublic=false]
     ;
 
 paramlist
-    : param (COMMA param)*
+    : param (COMMA param)* (COMMA INT '...' val=ID)? //
+    | (INT '...' val=ID)
     ;
 
 param
