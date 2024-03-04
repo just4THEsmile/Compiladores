@@ -2,6 +2,7 @@
 class MethodsAndFields{
 	int field1;
 	boolean field2;
+	int main;
 	MethodsAndFields field3;
 	
 	public int getField1(){

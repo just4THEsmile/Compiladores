@@ -32,7 +32,6 @@ INT : 'int' ;
 PUBLIC : 'public' ;
 STATIC : 'static' ;
 VOID : 'void' ;
-MAIN : 'main' ;
 TRUE : 'true' ;
 FALSE : 'false' ;
 RETURN : 'return' ;
@@ -49,7 +48,7 @@ STRING : 'String' ;
 
 
 INTEGER : [0-9]+ ;
-ID : [a-zA-Z0-9_$]+ ;
+ID : [a-zA-Z0-9_$]+  ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
@@ -74,6 +73,7 @@ classDecl
 
 varDecl
     : type name=ID SEMI
+    | type name='main' SEMI
     | type name=ID '[' ']' SEMI
     | type name=ID EQUALS expr SEMI
     ;
@@ -98,7 +98,7 @@ typeNotArray
 
 mainMethodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID MAIN LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY (varDecl | stmt)* RCURLY
+     STATIC VOID 'main' LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY (varDecl | stmt)* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false]
