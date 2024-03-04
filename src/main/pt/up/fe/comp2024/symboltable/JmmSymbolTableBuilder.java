@@ -84,7 +84,14 @@ public class JmmSymbolTableBuilder {
                             }
                         );
         classDecl.getChildren("MainMethodDecl").stream()
-                .forEach(method -> map.put("main", Arrays.asList(new Symbol (new Type("String",true),"args"))));
+                .forEach(method ->{
+                        try{
+                        map.put("main",Arrays.asList(new Symbol (new Type("String",true),method.get("arg"))));
+                        }catch (NullPointerException e){
+                            map.put("main",new ArrayList<Symbol>());
+                        }
+
+                });
 
         return map;
     }

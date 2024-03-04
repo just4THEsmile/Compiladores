@@ -90,7 +90,7 @@ type
 
 mainMethodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID MAIN LPAREN 'String' '['']' name=ID RPAREN LCURLY (varDecl | stmt)* RCURLY
+     STATIC VOID MAIN LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY (varDecl | stmt)* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false]
