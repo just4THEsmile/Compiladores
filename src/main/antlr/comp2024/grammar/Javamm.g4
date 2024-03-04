@@ -74,13 +74,21 @@ classDecl
 varDecl
     : type name=ID SEMI
     | type name=ID '[' ']' SEMI
-    | type name=ID EQUALS expr SEMI
     ;
 
 type
-    : type '[' ']'
+    : typeArray '[' ']'
     | name= INT
     | name= STRING
+    | name= BOOLEAN
+    | name= ID
+    | name= VOID
+    ;
+
+typeArray
+    : name= INT
+    | name= STRING
+    | name= INT '...'
     | name= BOOLEAN
     | name= ID
     | name= VOID
