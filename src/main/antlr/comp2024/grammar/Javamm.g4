@@ -91,6 +91,7 @@ typeArray
     | name= BOOLEAN
     | name= ID
     | name= VOID
+    | typeArray '[' ']'
     ;
 
 mainMethodDecl locals[boolean isPublic=false]
