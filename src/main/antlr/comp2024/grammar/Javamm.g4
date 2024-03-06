@@ -137,7 +137,7 @@ expr
     | expr '.' ID LPAREN (expr (COMMA expr)*)? RPAREN #MemberCallExpr //
     | expr '.' 'length' #LengthExpr //
     | value=INTEGER #Integer //
-    | expr '['expr']' #ArrayAccessExpr //
+    | expr ('['expr']')+ #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //
     | '['(expr)? (COMMA expr)*']' #Array //
