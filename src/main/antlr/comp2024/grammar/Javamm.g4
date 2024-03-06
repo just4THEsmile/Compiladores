@@ -143,6 +143,8 @@ expr
     | NEW INT '['expr']' #NewIntArray //
     | NEW ID '('')' #NewObject //
     | value=ID op=('++' | '--') #UnaryOp //
+    | '[' (expr (COMMA expr)*)? ']' #Array //
+    | 'this' #ThisRefExpr //
 
 
     ;
