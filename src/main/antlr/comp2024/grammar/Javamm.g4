@@ -41,7 +41,7 @@ IF : 'if' ;
 ELSE : 'else' ;
 COMMA : ',' ;
 NEW : 'new' ;
-BOOLEAN : 'booleann' ;
+BOOLEAN : 'boolean' ;
 STRING : 'String' ;
 
 

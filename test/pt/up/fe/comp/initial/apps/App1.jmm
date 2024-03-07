@@ -3,7 +3,6 @@ class App {
 	int foo(int a) {
 		int b;
 		int c;
-
 		b = 9;
 		c = a + b * 8;
 
