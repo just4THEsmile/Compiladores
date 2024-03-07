@@ -82,7 +82,6 @@ type
     | name= STRING
     | name= BOOLEAN
     | name= ID
-    | name= VOID
     ;
 
 typeArray
@@ -90,7 +89,6 @@ typeArray
     | name= STRING
     | name= BOOLEAN
     | name= ID
-    | name= VOID
     ;
 
 mainMethodDecl locals[boolean isPublic=false]
@@ -101,7 +99,7 @@ mainMethodDecl locals[boolean isPublic=false]
 methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
     STATIC?
-    type name=ID
+    (type|VOID) name=ID
     LPAREN paramlist? RPAREN
     LCURLY varDecl* stmt* RCURLY
     ;
@@ -141,12 +139,10 @@ expr
     | value = FALSE #BooleanLiteral //
     | '['(expr)? (COMMA expr)*']' #Array //
     | NEW INT '['expr']' #NewIntArray //
-    | NEW ID '('')' #NewObject //
+    | NEW classname=ID '('(expr (COMMA expr)*)?')' #NewObject //
     | value=ID op=('++' | '--') #UnaryOp //
     | '[' (expr (COMMA expr)*)? ']' #Array //
     | 'this' #ThisRefExpr //
-
-
     ;
 
 
