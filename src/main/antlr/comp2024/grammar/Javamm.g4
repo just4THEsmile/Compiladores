@@ -140,6 +140,7 @@ expr
     | '['(expr)? (COMMA expr)*']' #Array //
     | NEW INT '['expr']' #NewIntArray //
     | NEW classname=ID '('(expr (COMMA expr)*)?')' #NewObject //
+    | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
     | value=ID op=('++' | '--') #UnaryOp //
     | '[' (expr (COMMA expr)*)? ']' #Array //
     | 'this' #ThisRefExpr //
