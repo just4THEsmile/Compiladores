@@ -74,6 +74,8 @@ classDecl
 varDecl
     : type name=ID SEMI
     | type name='main' SEMI
+    | type name='length' SEMI
+    | type name='string' SEMI
     ;
 
 type

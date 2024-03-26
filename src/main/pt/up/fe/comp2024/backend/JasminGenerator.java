@@ -74,7 +74,11 @@ public class JasminGenerator {
         code.append(".class ").append(className).append(NL).append(NL);
 
         // TODO: Hardcoded to Object, needs to be expanded
-        code.append(".super java/lang/Object").append(NL);
+        if (ollirResult.getOllirClass().getSuperClass() != null) {
+            code.append(".super ").append(ollirResult.getOllirClass().getSuperClass()).append(NL);
+        } else{
+            code.append(".super java/lang/Object").append(NL);
+        }
 
         // generate a single constructor method
         var defaultConstructor = """
@@ -119,7 +123,53 @@ public class JasminGenerator {
         var methodName = method.getMethodName();
 
         // TODO: Hardcoded param types and return type, needs to be expanded
-        code.append("\n.method ").append(modifier).append(methodName).append("(I)I").append(NL);
+        var returntype= method.getReturnType().getTypeOfElement().toString();
+
+        if (method.isStaticMethod()){
+            code.append("\n.method ").append(modifier).append("static ").append(methodName);
+        }else{
+            code.append("\n.method ").append(modifier).append(methodName);
+        }
+        code.append("(");
+        for (var param : method.getParams()) {
+            switch (param.getType().getTypeOfElement().toString()){
+                case "INT32":
+                    code.append("I");
+                    break;
+                case "BOOLEAN":
+                    code.append("Z");
+                    break;
+                case "STRING":
+                    code.append("Ljava/lang/String;");
+                    break;
+                case "ARRAYREF":
+                    code.append("[");
+                    var arrayElementType = param.getType().getTypeOfElement();
+                    var test= param.getType();
+                    var test2= test.getTypeOfElement();
+                    break;
+                default:
+                    throw new NotImplementedException(param.getType().getTypeOfElement().toString());
+            }
+            param.getType().getTypeOfElement().toString();
+        }
+        code.append(")");
+        switch (returntype){
+            case "INT32":
+                code.append("I").append(NL);
+                break;
+            case "VOID":
+                code.append("V").append(NL);
+                break;
+            case "BOOLEAN":
+                code.append("Z").append(NL);
+                break;
+            case "STRING":
+                code.append("Ljava/lang/String;").append(NL);
+                break;
+            default:
+                throw new NotImplementedException(returntype);
+        }
 
         // Add limits
         code.append(TAB).append(".limit stack 99").append(NL);
@@ -201,7 +251,10 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // TODO: Hardcoded to int return type, needs to be expanded
-
+        String type = returnInst.getReturnType().getTypeOfElement().toString();
+        if (type.equals("VOID")){
+            return code.append("return").append(NL).toString();
+        }
         code.append(generators.apply(returnInst.getOperand()));
         code.append("ireturn").append(NL);
 
