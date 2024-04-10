@@ -374,8 +374,12 @@ public class JasminGenerator {
         // generate code for loading what's on the right
         switch (call.getInvocationType()){
             case invokespecial:
+                String method = (((LiteralElement)call.getOperands().get(1)).getLiteral());
                 String elemtype= this.getClassName(((ClassType) call.getOperands().get(0).getType()).getName());
-                code.append("invokespecial ").append(elemtype).append("/").append("<init>");
+                for (Element op : call.getArguments()){
+                    code.append(generators.apply(op));
+                }
+                code.append("invokespecial ").append(elemtype).append("/").append(this.remove_quotes(method));
 
                 //arguments
                 code.append("(");
@@ -386,8 +390,24 @@ public class JasminGenerator {
                 code.append(this.getTypeToStr(call.getReturnType())).append(NL);
                 break;
             case invokestatic:
+                var elemt= ( (Operand) call.getOperands().get(0)).getName();
+                method = (((LiteralElement) call.getOperands().get(1)).getLiteral());
+                for (Element op : call.getArguments()){
+                    code.append(generators.apply(op));
+                }
+                code.append("invokestatic ").append(elemt).append("/").append(this.remove_quotes(method));
+                code.append("(");
+                for (Element op : call.getArguments()){
+                    code.append(this.getTypeToStr(op.getType()));
+                }
+                code.append(")");
+                code.append(this.getTypeToStr(call.getReturnType())).append(NL);
+
+
+
                 break;
             case invokevirtual:
+
                 break;
             case NEW:
                 if (call.getReturnType().getTypeOfElement() == ElementType.OBJECTREF){
@@ -443,5 +463,8 @@ public class JasminGenerator {
         return className.substring(className.lastIndexOf(".")+1);
     }
 
+    private String remove_quotes(String str){
+        return str.substring(1,str.length()-1);
+    }
 
 }
