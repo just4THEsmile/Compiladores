@@ -236,7 +236,17 @@ public class JasminGenerator {
         if (reg == -1){
             return "";
         }
-        return "iload " + reg + NL;
+        String t = operand.getType().toString();
+        switch (t){
+            case "INT32":
+                return "iload " + reg + NL;
+            case "BOOLEAN":
+                return "iload " + reg + NL;
+            default:
+                return "aload " + reg + NL;
+
+        }
+
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
@@ -379,7 +389,7 @@ public class JasminGenerator {
                 for (Element op : call.getArguments()){
                     code.append(generators.apply(op));
                 }
-                code.append("invokespecial ").append(elemtype).append("/").append(this.remove_quotes(method));
+                code.append("invokespecial ").append(elemtype).append("/").append("<init>");
 
                 //arguments
                 code.append("(");
@@ -392,7 +402,7 @@ public class JasminGenerator {
             case invokestatic:
                 var elemt= ( (Operand) call.getOperands().get(0)).getName();
                 method = (((LiteralElement) call.getOperands().get(1)).getLiteral());
-                for (Element op : call.getArguments()){
+                for (Element op : call.getArguments()) {
                     code.append(generators.apply(op));
                 }
                 code.append("invokestatic ").append(elemt).append("/").append(this.remove_quotes(method));
@@ -407,7 +417,16 @@ public class JasminGenerator {
 
                 break;
             case invokevirtual:
-
+                code.append(this.generators.apply(call.getOperands().get(0)));
+                var elem= ( (Operand) call.getOperands().get(0)).getName();
+                method = this.remove_quotes((((LiteralElement) call.getOperands().get(1)).getLiteral()));
+                elemtype= this.getClassName(((ClassType) call.getOperands().get(0).getType()).getName());
+                code.append("invokevirtual ").append(elemtype).append("/").append(method).append("(");
+                for (Element op : call.getArguments()){
+                    code.append(this.getTypeToStr(op.getType()));
+                }
+                code.append(")");
+                code.append(this.getTypeToStr(call.getReturnType())).append(NL);
                 break;
             case NEW:
                 if (call.getReturnType().getTypeOfElement() == ElementType.OBJECTREF){
