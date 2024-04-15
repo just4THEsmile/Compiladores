@@ -31,10 +31,18 @@ public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Vo
 
     @Override
     public List<Report> analyze(JmmNode root, SymbolTable table) {
+
+        // Clear existing reports
+        clearReports();
+
         // Visit the node
         visit(root, table);
 
         // Return reports
         return getReports();
+    }
+
+    protected void clearReports() {
+        reports.clear();
     }
 }

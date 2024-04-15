@@ -1,6 +1,7 @@
 package pt.up.fe.comp2024.symboltable;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
+import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2024.ast.Kind;
@@ -142,14 +143,15 @@ public class JmmSymbolTableBuilder {
             methodDecl.getChildren("VarDecl").stream()
                     .forEach(varDecl -> {
                         Type type = new Type(null, false);
-                        if(varDecl.getChildren("Type").size()>0) {
-                            // in case of an array
-                            if (varDecl.getChildren("Type").get(0).getChildren("TypeArray").size() > 0) {
-                                type = new Type(varDecl.getChildren("Type").get(0).getChildren("TypeArray").get(0).get("name"), true);
-                            } else {
-                                type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
-                            }
+                        if (varDecl.getChildren("Type").size() > 0 &&
+                                varDecl.getChildren("Type").get(0).getChildren("TypeArray").size() > 0) {
+                            // Acessar o nome do tipo array
+                            type = new Type(varDecl.getChildren("Type").get(0).getChildren("TypeArray").get(0).get("name"), true);
+                        } else if (varDecl.getChildren("Type").size() > 0) {
+                            // Acessar o nome do tipo não array
+                            type = new Type(varDecl.getChildren("Type").get(0).get("name"), false);
                         }
+
                         locals.add(new Symbol(type ,varDecl.get("name")));
                     });
         }
@@ -204,4 +206,13 @@ public class JmmSymbolTableBuilder {
         }
     }
 
+    public List<String> getSuperClasses(JmmNode root) {
+        List<String> superClasses = new ArrayList<>();
+        JmmNode classDecl = root.getChildren("ClassDecl").get(0); // Assuming there's only one class declaration
+        if (classDecl.getChildren("Extends").size() > 0) {
+            String superClass = classDecl.getChildren("Extends").get(0).get("name");
+            superClasses.add(superClass);
+        }
+        return superClasses;
+    }
 }
