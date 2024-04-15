@@ -133,7 +133,7 @@ expr
     | name=ID #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
     | expr op=SMALLER expr #BinaryExpr //
-    | expr ('.' ID LPAREN (expr (COMMA expr)*)? RPAREN)+ #MemberCallExpr //
+    | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     | expr '.' 'length' #LengthExpr //
     | value=INTEGER #Integer //
     | expr '['expr']' #ArrayAccessExpr //
