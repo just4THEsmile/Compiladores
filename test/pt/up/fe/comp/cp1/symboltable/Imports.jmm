@@ -2,5 +2,5 @@ import io;
 import List;
 
 class T{
-
+    io.fetchdata();
 }

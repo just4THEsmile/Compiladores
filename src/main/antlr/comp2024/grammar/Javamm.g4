@@ -139,7 +139,6 @@ expr
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //
-    | '['(expr)? (COMMA expr)*']' #Array //
     | NEW INT '['expr']' #NewIntArray //
     | NEW classname=ID '('(expr (COMMA expr)*)?')' #NewObject //
     | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //

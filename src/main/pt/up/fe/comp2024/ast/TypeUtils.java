@@ -32,6 +32,41 @@ public class TypeUtils {
             case PAREN_EXPR -> getExprType(expr.getChildren().get(0), table);
             case MEMBER_CALL_EXPR -> get_member_call_expr(expr, table);
 
+            case LENGTH_EXPR -> {
+                var t = getExprType(expr.getChildren().get(0), table);
+                if(t.isArray()){
+                    yield new Type("int", false);
+                }else{
+                    yield new Type(null, false);
+                }
+            }
+            case ARRAY_ACCESS_EXPR -> {
+                var t = getExprType(expr.getChildren().get(0), table);
+                var t2 = getExprType(expr.getChildren().get(1), table);
+                if(t.isArray() && t2.getName().equals("int") && !t2.isArray()){
+                        yield new Type(t.getName(), false);
+                }
+                yield new Type(null, false);
+            }
+            case BOOLEAN_LITERAL -> new Type("boolean", false);
+            case ARRAY ->{
+                Type t =  new Type(null, false);
+                if (expr.getChildren().isEmpty()) {
+                    t =  new Type("empty", true);
+                    yield t;
+                }else{
+                    t = getExprType(expr.getChildren().get(0), table);
+                }
+                for(var c : expr.getChildren()){
+                    if(!getExprType(c, table).getName().equals(t.getName()) && !getExprType(c, table).isArray()){
+                        yield new Type(null, false);
+                    }
+                }
+                yield new Type(t.getName(),true);
+            }
+
+
+
 
 
             default -> throw new UnsupportedOperationException("Can't compute type for expression kind '" + kind + "'");
@@ -120,7 +155,7 @@ public class TypeUtils {
         if (node.getChildren().isEmpty()){
             Type t= getVarExprType(node.getJmmChild(0), table);
             if (!t.isArray() && !t.getName().equals("int") && !t.getName().equals("boolean")) {
-                if (node.getJmmChild(0).get("name").equals("this")){
+                if (t.getName().equals(table.getClassName())) {
                     for(var m : table.getMethods()){
                         if(m.equals(method)){
                             return table.getReturnType(m);
@@ -128,7 +163,7 @@ public class TypeUtils {
                     }
                     return new Type(null, false);
                 }
-                return new Type("import", true);
+                return new Type(t.getName(), false);
             }
         }
         return new Type(null, false);

@@ -22,7 +22,11 @@ public enum Kind {
     TYPE_ARRAY,
     NOT_EXPR,
     PAREN_EXPR,
-    MEMBER_CALL_EXPR;
+    MEMBER_CALL_EXPR,
+    LENGTH_EXPR,
+    ARRAY_ACCESS_EXPR,
+    BOOLEAN_LITERAL,
+    ARRAY;
 
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);
