@@ -29,8 +29,9 @@ public class JmmSymbolTableBuilder {
         var fields = buildFields(classDecl);
         var Imports =buildImports(importsDecl);
         var parent = buildParent(classDecl);
+        var varArgs = buildVarArgs(classDecl);
 
-        return new JmmSymbolTable(className, methods, returnTypes, params,fields, locals,Imports,parent);
+        return new JmmSymbolTable(className, methods, returnTypes, params,fields, locals,Imports,varArgs,parent);
     }
 
     private static Map<String, Type> buildReturnTypes(JmmNode classDecl) {
@@ -80,7 +81,7 @@ public class JmmSymbolTableBuilder {
 
                                 }
                                 try{ // in case of varargs
-                                    symbols.add(new Symbol(new Type("int",false),method.getChildren("Paramlist").get(0).get("val")));
+                                    symbols.add(new Symbol(new Type("varargs",true),method.getChildren("Paramlist").get(0).get("val")));
                                 }catch (Exception e){
                                     //do nothing
                                 }
@@ -223,5 +224,17 @@ public class JmmSymbolTableBuilder {
             superClasses.add(superClass);
         }
         return superClasses;
+    }
+    private static Map<String, Boolean> buildVarArgs(JmmNode classDecl) {
+        Map<String, Boolean> map = new HashMap<>();
+        classDecl.getChildren(METHOD_DECL).stream()
+                .forEach(method -> {
+                    if (method.getChildren("VarArgs").size()==1){
+                        map.put(method.get("name"),true);
+                    }else{
+                        map.put(method.get("name"),false);
+                    }
+                });
+        return map;
     }
 }

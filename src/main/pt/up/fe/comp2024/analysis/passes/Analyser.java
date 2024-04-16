@@ -15,6 +15,7 @@ import pt.up.fe.comp2024.ast.TypeUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Analyser extends AnalysisVisitor {
@@ -23,11 +24,19 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.VAR_DECL, this::visitVarDecl);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
         addVisit(Kind.METHOD_DECL, this::visitMethod);
-        addVisit(Kind.ASSIGN_STMT, this::visitWhileStmt);
+        addVisit(Kind.ASSIGN_STMT, this::Check_Assign_STM);
         addVisit(Kind.PROGRAM, this::dealWithProgram);
         addVisit(Kind.TYPE, this::dealWithType);
         addVisit(Kind.VAR_REF_EXPR, this::Check_decl);
         addVisit(Kind.RETURN_STMT, this::Check_return);
+        addVisit(Kind.ARRAY, this::dealWithArray);
+        addVisit(Kind.MEMBER_CALL_EXPR, this::dealWithMemberCallExpr);
+        addVisit(Kind.METHOD_CALL_EXPR, this::dealWithCallExpr);
+        addVisit(Kind.IF_STMT, this::dealWithIf);
+        addVisit(Kind.WHILE_STMT, this::dealWithWhile);
+
+
+
     }
 
     private Void dealWithProgram(JmmNode node, SymbolTable table) {
@@ -151,8 +160,9 @@ public class Analyser extends AnalysisVisitor {
         JmmNode leftOperand = binaryExpr.getChildren().get(0);
         JmmNode rightOperand = binaryExpr.getChildren().get(1);
 
-        Type leftType = TypeUtils.getExprType(leftOperand, table);
-        Type rightType = TypeUtils.getExprType(rightOperand, table);
+        String method = get_Caller_method(binaryExpr);
+        Type leftType = TypeUtils.getExprType(leftOperand, table,method);
+        Type rightType = TypeUtils.getExprType(rightOperand, table,method);
 
         if ( leftType.getName().equals(rightType.getName()) &&
                 (leftType.isArray() == rightType.isArray()) &&
@@ -212,7 +222,7 @@ public class Analyser extends AnalysisVisitor {
             for (int i = 0; i < paramTypes.size(); i++) {
                 Type paramType = paramTypes.get(i);
                 JmmNode argNode = argNodes.get(i);
-                Type argType = TypeUtils.getExprType(argNode, table);
+                Type argType = TypeUtils.getExprType(argNode, table,null);
 
                 if (!isSubtypeOf(argType, paramType, table)) {
                     int line = argNode.get("lineStart") != null ? Integer.parseInt(argNode.get("lineStart")) : -1;
@@ -331,19 +341,27 @@ public class Analyser extends AnalysisVisitor {
         }
     }
 
-    private Void visitWhileStmt(JmmNode whileNode, SymbolTable table) {
-        JmmNode expression = whileNode.getChildren().get(0);
-        JmmNode statement = whileNode.getChildren().get(1);
+    private Void Check_Assign_STM(JmmNode assign_stm, SymbolTable table) {
+        String MethodName = get_Caller_method(assign_stm);
+
+        Type exp1 = TypeUtils.getExprType(assign_stm.getChildren().get(0),table,MethodName);
+        Type exp2 = TypeUtils.getExprType(assign_stm.getChildren().get(1),table,MethodName);
+        if (!exp1.equals(exp2) && !TypeUtils.check_for_imports_type(exp1,table) && !TypeUtils.check_for_imports_type(exp2,table)){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
+                    "Types differ " + exp1.getName() + " and " + exp2.getName()));
+        }
 
 
 
-        visit(statement, table);
+
+
 
         return null;
     }
 
     private void checkWhileStatement(JmmNode expression, SymbolTable table) {
-        Type exprType = TypeUtils.getExprType(expression, table);
+        String method = get_Caller_method(expression);
+        Type exprType = TypeUtils.getExprType(expression, table, method);
         if (exprType.isArray() || !exprType.getName().equals("boolean")) {
             int line = expression.get("lineStart") != null ? Integer.parseInt(expression.get("lineStart")) : -1;
             int column = expression.get("colStart") != null ? Integer.parseInt(expression.get("colStart")) : -1;
@@ -353,10 +371,11 @@ public class Analyser extends AnalysisVisitor {
     }
 
     private Void dealWithType(JmmNode node, SymbolTable table) {
-        if (node.getChildren().size() == 0) {
+        if (node.getChildren().isEmpty()) {
             return null;
         }
-        Type arrayType = TypeUtils.getExprType(node.getChildren().get(0), table);
+        String method = get_Caller_method(node);
+        Type arrayType = TypeUtils.getExprType(node.getChildren().get(0), table,method);
         //Type indexType = TypeUtils.getExprType(node.getChildren().get(1), table);
 
         if (arrayType == null) {
@@ -382,7 +401,8 @@ public class Analyser extends AnalysisVisitor {
     }
 
     private Void Check_decl(JmmNode node, SymbolTable table) {
-        Type objectType = TypeUtils.getVarExprType(node, table);
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getVarExprType(node, table, method);
         if (objectType.getName()==null){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Variable not declared " + objectType.getName()));
@@ -391,7 +411,8 @@ public class Analyser extends AnalysisVisitor {
     }
 
     private Void dealWithMemberAccess(JmmNode node, SymbolTable table) {
-        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table);
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table,method);
 
         if (objectType == null) {
             int line = NodeUtils.getLine(node);
@@ -451,7 +472,7 @@ public class Analyser extends AnalysisVisitor {
         }
 
         for (Symbol parameter : methodParams) {
-            Type paramType = TypeUtils.getExprType(node.getJmmChild(1 + methodParams.indexOf(parameter)), table);
+            Type paramType = TypeUtils.getExprType(node.getJmmChild(1 + methodParams.indexOf(parameter)), table,null);
             Type expectedType = parameter.getType();
 
             if (!TypeUtils.areTypesAssignable(paramType, expectedType, table)) {
@@ -465,11 +486,129 @@ public class Analyser extends AnalysisVisitor {
         return null;
     }
     private Void Check_return(JmmNode node, SymbolTable table) {
-        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table);
+        String method= get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
         Type returntype=table.getReturnType(node.getParent().get("name"));
         if (!objectType.equals(returntype)){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Variable not declared " + objectType.getName()));
+        }
+        return null;
+    }
+    private String get_Caller_method(JmmNode node){
+        while (!(node.getKind()).equals("MethodDecl") && !(node.getKind()).equals("MainMethodDecl")){
+            node=node.getParent();
+        }
+        return node.get("name");
+    }
+
+    private Void dealWithArray(JmmNode node, SymbolTable table) {
+        String method = get_Caller_method(node);
+        Type arrayType = TypeUtils.getExprType(node, table,method);
+        if (arrayType == null) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Array is invalid"));
+        }
+
+        return null;
+    }
+
+    private Void dealWithCallExpr(JmmNode node, SymbolTable table){
+        String method_called = node.get("funcname");
+        if (table.getMethods().contains(method_called)){
+            List<Symbol> methodParams = table.getParameters(method_called);
+
+            if (methodParams.size()!=node.getChildren().size()) {
+                int line = NodeUtils.getLine(node);
+                int column = NodeUtils.getColumn(node);
+                String message = "Expected " + methodParams.size() + " parameters but received " + (node.getChildren().size()) + " parameters";
+                addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                return null;
+
+            }
+
+            for (int i = 0; i < methodParams.size(); i++) {
+                Type paramType = TypeUtils.getExprType(node.getJmmChild(i), table,null);
+                Type expectedType = methodParams.get(i).getType();
+
+                if (!paramType.equals(expectedType)) {
+                    int line = NodeUtils.getLine(node);
+                    int column = NodeUtils.getColumn(node);
+                    String message = "Expected parameter of type " + expectedType.getName() + " in method " + method_called + " but found " + paramType.getName();
+                    addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                }
+            }
+
+        }else{
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Method not declared " + method_called));
+        }
+
+        return null;
+    }
+    private Void dealWithMemberCallExpr(JmmNode node, SymbolTable table){
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+        if(TypeUtils.check_for_imports_type(objectType,table)){
+            return null;
+        }
+        if (objectType.getName() == null) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Object is invalid"));
+        }
+        String method_called = node.get("name");
+        if (table.getMethods().contains(method_called)){
+            List<Symbol> methodParams = table.getParameters(method_called);
+
+            if (methodParams.size()!=(node.getChildren().size()-1) && !Objects.equals(methodParams.get(methodParams.size() - 1).getType().getName(), "varargs")) {
+                int line = NodeUtils.getLine(node);
+                int column = NodeUtils.getColumn(node);
+                String message = "Expected " + methodParams.size() + " parameters but received " + (node.getChildren().size() - 1) + " parameters";
+                addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                return null;
+            }
+            int j = 0;
+            for (int i = 0; i < (node.getChildren().size()-1); i++) {
+                Type paramType = TypeUtils.getExprType(node.getJmmChild(i+1), table,null);
+                Type expectedType = methodParams.get(j).getType();
+                if (Objects.equals(expectedType.getName(), "varargs")) {
+                    expectedType = new Type("int", false);
+                    j--;
+                }
+                j++;
+
+                if (!paramType.equals(expectedType)) {
+                    int line = NodeUtils.getLine(node);
+                    int column = NodeUtils.getColumn(node);
+                    String message = "Expected parameter of type " + expectedType.getName() + " in method " + method_called + " but found " + paramType.getName();
+                    addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                }
+            }
+
+        }else{
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Method not declared " + method_called));
+        }
+
+
+        return null;
+    }
+
+    private Void dealWithIf(JmmNode node, SymbolTable table){
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+        if (!objectType.getName().equals("boolean")) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "If condition must be a boolean expression"));
+        }
+        return null;
+    }
+    private Void dealWithWhile(JmmNode node, SymbolTable table){
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+        if (!objectType.getName().equals("boolean")) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "While condition must be a boolean expression"));
         }
         return null;
     }

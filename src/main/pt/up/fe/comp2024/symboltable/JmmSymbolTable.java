@@ -23,6 +23,7 @@ public class JmmSymbolTable implements SymbolTable {
 
     private final List<Symbol> fields;
     private final Map<String, List<Symbol>> locals;
+    private final Map<String, Boolean> varArgs;
 
     public JmmSymbolTable(String className,
                           List<String> methods,
@@ -31,6 +32,7 @@ public class JmmSymbolTable implements SymbolTable {
                           List<Symbol> fields,
                           Map<String, List<Symbol>> locals,
                           List<String> imports,
+                          Map<String, Boolean> varArgs,
                           String parent) {
         this.parent=parent;
         this.className = className;
@@ -40,6 +42,7 @@ public class JmmSymbolTable implements SymbolTable {
         this.locals = locals;
         this.fields = fields;
         this.imports = imports;
+        this.varArgs = varArgs;
     }
 
     @Override
@@ -80,5 +83,8 @@ public class JmmSymbolTable implements SymbolTable {
     @Override
     public List<Symbol> getLocalVariables(String methodSignature) {
         return this.locals.get(methodSignature);
+    }
+    public Boolean getVarArgs(String methodSignature){
+        return this.varArgs.get(methodSignature);
     }
 }

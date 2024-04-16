@@ -30,7 +30,11 @@ public enum Kind {
     NEW_INT_ARRAY,
     NEW_OBJECT,
     METHOD_CALL_EXPR,
-    THIS_REF_EXPR;
+    THIS_REF_EXPR,
+    WHILE_STMT,
+    IF_STMT,
+    EXPR_STMT,
+    MAIN_METHOD_DECL;
 
 
 

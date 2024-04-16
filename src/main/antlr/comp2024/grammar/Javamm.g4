@@ -107,8 +107,8 @@ methodDecl locals[boolean isPublic=false , boolean isStatic=false]
     ;
 
 paramlist
-    : (param (COMMA param)* (COMMA INT '...' val=ID)?) //
-    | (INT '...' val=ID)
+    : (param (COMMA param)* (COMMA INT '...' val=ID)?) #Params //
+    | (INT '...' val=ID) #VarArgs //
     ;
 
 param
