@@ -4,6 +4,8 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.List;
+
 public class TypeUtils {
 
     private static final String INT_TYPE_NAME = "int";
@@ -43,7 +45,7 @@ public class TypeUtils {
             case ARRAY_ACCESS_EXPR -> {
                 var t = getExprType(expr.getChildren().get(0), table);
                 var t2 = getExprType(expr.getChildren().get(1), table);
-                if(t.isArray() && t2.getName().equals("int") && !t2.isArray()){
+                if((t.isArray() || check_for_imports_type(t,table)) && ((t2.getName().equals("int") && !t2.isArray()) || check_for_imports_type(t2,table) )){
                         yield new Type(t.getName(), false);
                 }
                 yield new Type(null, false);
@@ -58,12 +60,36 @@ public class TypeUtils {
                     t = getExprType(expr.getChildren().get(0), table);
                 }
                 for(var c : expr.getChildren()){
-                    if(!getExprType(c, table).getName().equals(t.getName()) && !getExprType(c, table).isArray()){
+                    if(!getExprType(c, table).getName().equals(t.getName()) && !getExprType(c, table).isArray() && !check_for_imports_type(getExprType(c, table),table)){
                         yield new Type(null, false);
                     }
                 }
                 yield new Type(t.getName(),true);
             }
+            case NEW_INT_ARRAY -> {
+                var t = getExprType(expr.getChildren().get(0), table);
+                if((t.getName().equals("int") || check_for_imports_type(t,table)) && !t.isArray()){
+                    yield new Type("int", true);
+                }
+                yield new Type(null, true);
+            }
+            case NEW_OBJECT -> {
+                var t = expr.get("classname");
+                if(table.getClassName().contains(t)){
+                    yield new Type(t, false);
+                }
+                yield new Type(null, false);
+            }
+            case METHOD_CALL_EXPR -> {
+                var method = expr.get("name");
+                for(var m : table.getMethods()){
+                    if(m.equals(method)){
+                        yield table.getReturnType(m);
+                    }
+                }
+                yield new Type(null, false);
+            }
+            case THIS_REF_EXPR -> new Type(table.getClassName(), false);
 
 
 
@@ -80,18 +106,24 @@ public class TypeUtils {
         String operator = binaryExpr.get("op");
         switch (operator) {
             case "+", "*", "/","-" :
-                if ( getExprType(binaryExpr.getChildren().get(0), table).getName().equals(INT_TYPE_NAME) &&
-                        getExprType(binaryExpr.getChildren().get(1), table).getName().equals(INT_TYPE_NAME)) {
+                if ( (getExprType(binaryExpr.getChildren().get(0), table).getName().equals(INT_TYPE_NAME)   &&
+                        getExprType(binaryExpr.getChildren().get(1), table).getName().equals(INT_TYPE_NAME) &&
+                        !getExprType(binaryExpr.getChildren().get(0), table).isArray()                      &&
+                        !getExprType(binaryExpr.getChildren().get(0), table).isArray()                  ) ||
+                        check_for_imports_type(getExprType(binaryExpr.getChildren().get(0), table),table) ||
+                        check_for_imports_type(getExprType(binaryExpr.getChildren().get(1), table),table)) {
                     return new Type(INT_TYPE_NAME, false);
                 } else {
                     return new Type(null, false);
                 }
 
             case "&&", "<" :
-                if ( getExprType(binaryExpr.getChildren().get(0), table).getName().equals("boolean") &&
-                        getExprType(binaryExpr.getChildren().get(0), table).isArray() &&
+                if ( (getExprType(binaryExpr.getChildren().get(0), table).getName().equals("boolean") &&
+                        !getExprType(binaryExpr.getChildren().get(0), table).isArray() &&
                         getExprType(binaryExpr.getChildren().get(1), table).getName().equals("boolean") &&
-                        getExprType(binaryExpr.getChildren().get(1), table).isArray() ) {
+                        !getExprType(binaryExpr.getChildren().get(1), table).isArray() ) ||
+                        check_for_imports_type(getExprType(binaryExpr.getChildren().get(0), table),table) ||
+                        check_for_imports_type(getExprType(binaryExpr.getChildren().get(1), table),table)) {
                     return new Type("boolean", false);
                 } else {
                     return new Type(null, false);
@@ -132,11 +164,11 @@ public class TypeUtils {
      * @param destinationType
      * @return true if sourceType can be assigned to destinationType
      */
-    public static boolean areTypesAssignable(Type sourceType, Type destinationType) {
+    public static boolean areTypesAssignable(Type sourceType, Type destinationType, SymbolTable table) {
         if(sourceType.isArray() && destinationType.isArray()){
-            return sourceType.getName().equals(destinationType.getName());
+            return (sourceType.getName().equals(destinationType.getName()) );
         } else if (!sourceType.isArray() && !destinationType.isArray()) {
-            return sourceType.getName().equals(destinationType.getName());
+            return ((sourceType.getName().equals(destinationType.getName()) || check_for_imports_type(sourceType, table) || check_for_imports_type(destinationType, table)));
         }else{
             return false;
         }
@@ -144,7 +176,7 @@ public class TypeUtils {
     private static Type Not_op(JmmNode node, SymbolTable table){
         var expr = node.getChildren().get(0);
         var type = getExprType(expr, table);
-        if(type.getName().equals("boolean") && !type.isArray()){
+        if((type.getName().equals("boolean") && !type.isArray()) || check_for_imports_type(type, table)){
             return new Type("boolean", false);
         }else{
             return new Type(null, false);
@@ -167,5 +199,16 @@ public class TypeUtils {
             }
         }
         return new Type(null, false);
+    }
+
+    public static Boolean check_for_imports_type(Type t1,SymbolTable table){
+        List<String> imports = table.getImports();
+
+        for(var i : imports){
+            if(i.contains(t1.getName())){
+                return true;
+            }
+        }
+        return false;
     }
 }

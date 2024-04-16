@@ -26,7 +26,12 @@ public enum Kind {
     LENGTH_EXPR,
     ARRAY_ACCESS_EXPR,
     BOOLEAN_LITERAL,
-    ARRAY;
+    ARRAY,
+    NEW_INT_ARRAY,
+    NEW_OBJECT,
+    METHOD_CALL_EXPR,
+    THIS_REF_EXPR;
+
 
 
     private static final Set<Kind> STATEMENTS = Set.of(ASSIGN_STMT, RETURN_STMT);

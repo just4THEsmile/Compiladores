@@ -454,7 +454,7 @@ public class Analyser extends AnalysisVisitor {
             Type paramType = TypeUtils.getExprType(node.getJmmChild(1 + methodParams.indexOf(parameter)), table);
             Type expectedType = parameter.getType();
 
-            if (!TypeUtils.areTypesAssignable(paramType, expectedType)) {
+            if (!TypeUtils.areTypesAssignable(paramType, expectedType, table)) {
                 int line = NodeUtils.getLine(node);
                 int column = NodeUtils.getColumn(node);
                 String message = "Expected parameter of type " + expectedType.getName() + " in method " + methodName + " but found " + paramType.getName();
