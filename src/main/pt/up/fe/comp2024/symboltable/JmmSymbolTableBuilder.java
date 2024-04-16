@@ -116,6 +116,15 @@ public class JmmSymbolTableBuilder {
 
 
                 });
+        classDecl.getChildren("MainMethodDecl").stream()
+                .forEach(method -> {
+
+
+                    map.put("main", getLocalsList(method));
+
+
+
+                });
 
         return map;
     }
