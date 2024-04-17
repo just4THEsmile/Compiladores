@@ -51,7 +51,7 @@ public class JmmSymbolTableBuilder {
 
                 });
         classDecl.getChildren("MainMethodDecl").stream()
-                .forEach(method -> map.put("main", new Type("Void", false)));
+                .forEach(method -> map.put("main", new Type("void", false)));
 
         return map;
     }

@@ -133,7 +133,6 @@ expr
     | LPAREN expr RPAREN #ParenExpr //
     | expr op=SMALLER expr #BinaryExpr //
     | expr '.' 'length' #LengthExpr //
-    | value=INTEGER #Integer //
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //

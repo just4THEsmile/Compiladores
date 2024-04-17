@@ -473,7 +473,7 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    String getClassName(String className){
+    private String getClassName(String className){
         if (className.equals("this")){
             return ollirResult.getOllirClass().getClassName();
         }

@@ -58,7 +58,7 @@ public class TypeUtils {
             case ARRAY ->{
                 Type t =  new Type(null, false);
                 if (expr.getChildren().isEmpty()) {
-                    t =  new Type("empty", true);
+                    t =  new Type("empty", true);  // TODO : empty array when comparing should igone empty type
                     yield t;
                 }else{
                     t = getExprType(expr.getChildren().get(0), table, method_name);
