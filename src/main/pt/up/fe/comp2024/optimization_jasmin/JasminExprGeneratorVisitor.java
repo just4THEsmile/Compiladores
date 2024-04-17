@@ -29,12 +29,12 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     protected void buildVisitor() {
         // Using strings to avoid compilation problems in projects that
         // might no longer have the equivalent enums in Kind class.
+        addVisit("MemberCallExpr", this::visitMemberCallExpr);
         addVisit("IntegerLiteral", this::visitIntegerLiteral);
         addVisit("VarRefExpr", this::visitVarRefExpr);
         addVisit("BinaryExpr", this::visitBinaryExpr);
         addVisit("BooleanLiteral", this::visitBooleanLiteral);
         addVisit("NewObject", this::visitNewObject);
-        addVisit("MemberCallExpr", this::visitMemberCallExpr);
         addVisit("ThisRefExpr", this::visitThisRefExpr);
     }
 
@@ -56,7 +56,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     private Void visitVarRefExpr(JmmNode varRefExpr, StringBuilder code) {
         var name = varRefExpr.get("name");
-
+        var fields = table.getFields();
         // get register
         var reg = currentRegisters.get(name);
         var imports = table.getImports();
@@ -64,9 +64,17 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         if ((TypeUtils.check_for_imports_type(t, table))) {
             return null;
         }
+        for (var field : fields) {
+            if (field.getName().equals(name)) {
+                code.append("aload 0" + NL);
+                code.append("getfield " + table.getClassName() + "/" + name + " " + getTypeToStr(field.getType()) + NL);
+                return null;
+            }
+        }
 
 
         SpecsCheck.checkNotNull(reg, () -> "No register mapped for variable '" + name + "'");
+
         switch (t.getName()) {
             case "int","boolean" :
                 code.append("iload ");
@@ -107,7 +115,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             this.visit(child, code);
         }
         code.append("new " + className + NL);
-        code.append("dup" + NL);
+        if (className.equals(table.getClassName())) {
+            code.append("dup" + NL);
+            code.append("invokespecial " + className + "/<init>()V" + NL);
+        }
         //code.append("invokespecial " + className + "/<init>()V" + NL);
         return null;
     }
@@ -129,7 +140,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             for (int i = 1; i<children.size(); i++) {
                 this.visit(children.get(i), code);
             }
-            code.append("invokevirtual " + className + "/" + methodName + "(");
+            code.append("invokestatic " + className + "/" + methodName + "(");
             for (int i = 1; i<children.size(); i++) {
                 t = TypeUtils.getExprType(children.get(i), table, CurrentMethod);
                 code.append(getTypeToStr(t));
@@ -151,6 +162,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 }else {
                     code.append("V");
                 }
+                code.append(NL);
                 return null;
             }
             var children = memberCallExpr.getChildren();

@@ -275,7 +275,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         var code = new StringBuilder();
 
         // generate code that will put the value on the right on top of the stack
-        exprGenerator.visit(assignStmt.getChild(1), code);
+
 
         // store value in top of the stack in destination
         var lhs = assignStmt.getChild(0);
@@ -292,10 +292,21 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             currentRegisters.put(destName, reg);
             nextRegister++;
         }
+        var fieldType = table.getFields();
+        for (Symbol field : fieldType){
+            if(field.getName().equals(destName)){
+                code.append("aload 0").append(NL);
+                exprGenerator.visit(assignStmt.getChild(1), code);
+                code.append("putfield ").append(table.getClassName()).append("/").append(destName).append(" ").append(getTypeToStr(field.getType())).append(NL);
+                return code.toString();
+            }
+        }
+
+        exprGenerator.visit(assignStmt.getChild(1), code);
         Type t = TypeUtils.getVarExprType(assignStmt.getJmmChild(0),table,currentMethod);
         if (t.getName().equals("int") || t.getName().equals("boolean")) {
             code.append("istore ").append(reg).append(NL);
-        } else {
+        }else{
             code.append("astore ").append(reg).append(NL);
         }
 
