@@ -46,7 +46,7 @@ public class TypeUtils {
                 var t = getExprType(expr.getChildren().get(0), table, method_name);
                 var t2 = getExprType(expr.getChildren().get(1), table, method_name);
                 if((t.isArray() || check_for_imports_type(t,table)) && ((t2.getName().equals("int") && !t2.isArray()) || check_for_imports_type(t2,table) )){
-                        if (t.getName()=="varargs"){
+                        if (t.getName()=="_varargs"){
                             yield new Type("int", false);
                         }else{
                             yield new Type(t.getName(), false);
@@ -82,6 +82,11 @@ public class TypeUtils {
                 if(table.getClassName().contains(t)){
                     yield new Type(t, false);
                 }
+                for(var i : table.getImports()){
+                    if(i.contains(t)){
+                        yield new Type(t, false);
+                    }
+                }
                 yield new Type(null, false);
             }
             case METHOD_CALL_EXPR -> {
@@ -108,7 +113,13 @@ public class TypeUtils {
     private static Type getBinExprType(JmmNode binaryExpr, SymbolTable table, String method_name) {
 
         String operator = binaryExpr.get("op");
+        String exp1_name=getExprType(binaryExpr.getChildren().get(0), table, method_name).getName();
+        String exp2_name=getExprType(binaryExpr.getChildren().get(1), table, method_name).getName();
+        if(exp1_name==null || exp2_name==null){
+            return new Type(null, false);
+        }
         switch (operator) {
+
             case "+", "*", "/","-" :
                 if ( (getExprType(binaryExpr.getChildren().get(0), table, method_name).getName().equals(INT_TYPE_NAME)   &&
                         getExprType(binaryExpr.getChildren().get(1), table, method_name ).getName().equals(INT_TYPE_NAME) &&
@@ -203,7 +214,7 @@ public class TypeUtils {
                     return new Type(null, false);
                 }
 
-                return new Type(t.getName(), false);
+                return new Type("#"+t.getName(), false);
             }
         }
         return new Type(null, false);
@@ -216,6 +227,22 @@ public class TypeUtils {
         }
         for(String i : imports){
             if(i.contains(t1.getName())){
+                return true;
+            }
+        }
+        return false;
+    }
+    public static Boolean check_for_imports_derivs(Type t1,SymbolTable table){
+        List<String> imports = table.getImports();
+        if (t1.getName() == null){
+            return false;
+        }
+        if(!t1.getName().contains("#")){
+            return false;
+        }
+        String imp=t1.getName().replace("#", "");
+        for(String i : imports){
+            if(i.contains(imp)){
                 return true;
             }
         }

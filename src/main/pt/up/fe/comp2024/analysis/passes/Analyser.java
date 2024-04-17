@@ -333,7 +333,7 @@ public class Analyser extends AnalysisVisitor {
         if (node == null) {
             return;
         }
-        if (node.getKind().equals("VARARGS")) {
+        if (node.getKind().equals("_varargs")) {
             varArgsNodes.add(node);
         }
         for (JmmNode child : node.getChildren()) {
@@ -344,9 +344,30 @@ public class Analyser extends AnalysisVisitor {
     private Void Check_Assign_STM(JmmNode assign_stm, SymbolTable table) {
         String MethodName = get_Caller_method(assign_stm);
 
+
         Type exp1 = TypeUtils.getExprType(assign_stm.getChildren().get(0),table,MethodName);
         Type exp2 = TypeUtils.getExprType(assign_stm.getChildren().get(1),table,MethodName);
-        if (!exp1.equals(exp2) && !TypeUtils.check_for_imports_type(exp1,table) && !TypeUtils.check_for_imports_type(exp2,table)){
+        if (exp1.getName()==null || exp2.getName()==null){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
+                    "Error variable not declared " + exp1.getName()));
+        }
+        if (table.getSuper()!= null){
+            if ((Objects.equals(exp1.getName(), table.getClassName()) && Objects.equals(exp2.getName(), table.getSuper())) ||(Objects.equals(exp2.getName(), table.getClassName()) && Objects.equals(exp1.getName(), table.getSuper()))){
+                return null;
+            }
+        }
+        var testt=exp2.getName();
+        var testtt= Objects.equals(exp2.getName(), table.getClassName());
+        Boolean check= (Objects.equals(exp1.getName(), table.getClassName()) && !Objects.equals(exp2.getName(), exp1.getName()) && !TypeUtils.check_for_imports_derivs(exp2,table));
+        Boolean check1= (Objects.equals(exp2.getName(), table.getClassName()) && !Objects.equals(exp1.getName(), exp2.getName()) && !TypeUtils.check_for_imports_derivs(exp1,table));
+        if ((Objects.equals(exp1.getName(), table.getClassName()) && !Objects.equals(exp2.getName(), exp1.getName()) &&!TypeUtils.check_for_imports_derivs(exp2,table)) || (Objects.equals(exp2.getName(), table.getClassName()) && !Objects.equals(exp1.getName(), exp2.getName()) && !TypeUtils.check_for_imports_derivs(exp1,table))){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
+                    "Error variable not declared " + exp1.getName()));
+
+        }
+        var test=TypeUtils.check_for_imports_type(exp1,table);
+        var test1 =TypeUtils.check_for_imports_derivs(exp2,table);
+        if (!exp1.equals(exp2) && !(TypeUtils.check_for_imports_type(exp1,table)) && !TypeUtils.check_for_imports_derivs(exp2,table)){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
                     "Types differ " + exp1.getName() + " and " + exp2.getName()));
         }
@@ -404,6 +425,7 @@ public class Analyser extends AnalysisVisitor {
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getVarExprType(node, table, method);
         if (objectType.getName()==null){
+            clearReports();
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Variable not declared " + objectType.getName()));
         }
@@ -490,8 +512,9 @@ public class Analyser extends AnalysisVisitor {
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
         Type returntype=table.getReturnType(node.getParent().get("name"));
         if (!objectType.equals(returntype)){
+            clearReports();
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "Variable not declared " + objectType.getName()));
+                    "Wrong Return type " + objectType.getName()));
         }
         return null;
     }
@@ -560,7 +583,7 @@ public class Analyser extends AnalysisVisitor {
         if (table.getMethods().contains(method_called)){
             List<Symbol> methodParams = table.getParameters(method_called);
 
-            if (methodParams.size()!=(node.getChildren().size()-1) && !Objects.equals(methodParams.get(methodParams.size() - 1).getType().getName(), "varargs")) {
+            if (methodParams.size()!=(node.getChildren().size()-1) && !Objects.equals(methodParams.get(methodParams.size() - 1).getType().getName(), "_varargs")) {
                 int line = NodeUtils.getLine(node);
                 int column = NodeUtils.getColumn(node);
                 String message = "Expected " + methodParams.size() + " parameters but received " + (node.getChildren().size() - 1) + " parameters";
@@ -571,7 +594,7 @@ public class Analyser extends AnalysisVisitor {
             for (int i = 0; i < (node.getChildren().size()-1); i++) {
                 Type paramType = TypeUtils.getExprType(node.getJmmChild(i+1), table,null);
                 Type expectedType = methodParams.get(j).getType();
-                if (Objects.equals(expectedType.getName(), "varargs")) {
+                if (Objects.equals(expectedType.getName(), "_varargs")) {
                     expectedType = new Type("int", false);
                     j--;
                 }
@@ -586,8 +609,12 @@ public class Analyser extends AnalysisVisitor {
             }
 
         }else{
-            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "Method not declared " + method_called));
+            String super_class = table.getSuper();
+            if (super_class ==null) {
+
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                        "Method not declared " + method_called));
+            }
         }
 
 
@@ -612,6 +639,8 @@ public class Analyser extends AnalysisVisitor {
         }
         return null;
     }
+
+
 
 
 

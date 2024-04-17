@@ -81,7 +81,7 @@ public class JmmSymbolTableBuilder {
 
                                 }
                                 try{ // in case of varargs
-                                    symbols.add(new Symbol(new Type("varargs",true),method.getChildren("Paramlist").get(0).get("val")));
+                                    symbols.add(new Symbol(new Type("_varargs",true),method.getChildren("Paramlist").get(0).get("val")));
                                 }catch (Exception e){
                                     //do nothing
                                 }
@@ -229,7 +229,7 @@ public class JmmSymbolTableBuilder {
         Map<String, Boolean> map = new HashMap<>();
         classDecl.getChildren(METHOD_DECL).stream()
                 .forEach(method -> {
-                    if (method.getChildren("VarArgs").size()==1){
+                    if (method.getChildren("_varargs").size()==1){
                         map.put(method.get("name"),true);
                     }else{
                         map.put(method.get("name"),false);
