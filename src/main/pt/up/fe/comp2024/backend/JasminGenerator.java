@@ -389,7 +389,7 @@ public class JasminGenerator {
                 for (Element op : call.getArguments()){
                     code.append(generators.apply(op));
                 }
-                code.append("invokespecial ").append(elemtype).append("/").append("<init>");
+                code.append("invokespecial ").append(elemtype).append("/").append(this.remove_quotes(method));
 
                 //arguments
                 code.append("(");
@@ -421,6 +421,9 @@ public class JasminGenerator {
                 var elem= ( (Operand) call.getOperands().get(0)).getName();
                 method = this.remove_quotes((((LiteralElement) call.getOperands().get(1)).getLiteral()));
                 elemtype= this.getClassName(((ClassType) call.getOperands().get(0).getType()).getName());
+                for (Element op : call.getArguments()){
+                    code.append(generators.apply(op));
+                }
                 code.append("invokevirtual ").append(elemtype).append("/").append(method).append("(");
                 for (Element op : call.getArguments()){
                     code.append(this.getTypeToStr(op.getType()));
