@@ -346,6 +346,7 @@ public class Analyser extends AnalysisVisitor {
 
 
         Type exp1 = TypeUtils.getExprType(assign_stm.getChildren().get(0),table,MethodName);
+        System.out.println((assign_stm.toTree()));
         Type exp2 = TypeUtils.getExprType(assign_stm.getChildren().get(1),table,MethodName);
         if (exp1.getName()==null || exp2.getName()==null){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
@@ -427,7 +428,7 @@ public class Analyser extends AnalysisVisitor {
         if (objectType.getName()==null){
             clearReports();
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "Variable not declared " + objectType.getName()));
+                    "Wrong type declaration " + objectType.getName()));
         }
         return null;
     }

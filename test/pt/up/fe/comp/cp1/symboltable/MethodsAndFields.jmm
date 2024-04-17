@@ -9,7 +9,6 @@ class MethodsAndFields{
 	}
 	
 	public boolean getField2(){
-	    field1 = this.getField1();
 		return field2;
 	}
 	

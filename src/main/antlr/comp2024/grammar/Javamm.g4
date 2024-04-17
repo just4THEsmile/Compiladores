@@ -65,9 +65,7 @@ classDecl
     : CLASS name=ID ('extends' parent=ID)?
         LCURLY
         varDecl*
-        mainMethodDecl*
-        methodDecl*
-        mainMethodDecl*
+        (mainMethodDecl | methodDecl)*
         RCURLY
     ;
 
@@ -95,7 +93,7 @@ typeArray
 
 mainMethodDecl locals[boolean isPublic=false, boolean isStatic=true]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID 'main' LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY  varDecl* stmt* RCURLY
+     STATIC VOID name='main' LPAREN ('String' '['']' arg=ID)? RPAREN LCURLY  varDecl* stmt* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false , boolean isStatic=false]
@@ -126,6 +124,7 @@ stmt
 
 expr
     : NOT expr #NotExpr //
+    | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
     | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (AND|SMALLER) expr #BinaryExpr //
@@ -133,7 +132,6 @@ expr
     | name=ID #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
     | expr op=SMALLER expr #BinaryExpr //
-    | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     | expr '.' 'length' #LengthExpr //
     | value=INTEGER #Integer //
     | expr '['expr']' #ArrayAccessExpr //

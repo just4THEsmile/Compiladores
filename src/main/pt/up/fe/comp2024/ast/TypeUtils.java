@@ -114,6 +114,7 @@ public class TypeUtils {
 
         String operator = binaryExpr.get("op");
         String exp1_name=getExprType(binaryExpr.getChildren().get(0), table, method_name).getName();
+        var test=getExprType(binaryExpr.getChildren().get(1), table, method_name);
         String exp2_name=getExprType(binaryExpr.getChildren().get(1), table, method_name).getName();
         if(exp1_name==null || exp2_name==null){
             return new Type(null, false);
@@ -150,6 +151,15 @@ public class TypeUtils {
 
 
     public static Type getVarExprType(JmmNode varRefExpr, SymbolTable table, String method_name) {
+
+        var imports= table.getImports();
+        String name=varRefExpr.get("name");
+        for(String i : imports){
+            if(i.contains(name)){
+                return new Type(name, false);
+            }
+        }
+
         for (var symbol : table.getFields()) {
             if (symbol.getName().equals(varRefExpr.get("name"))) {
                 return symbol.getType();
