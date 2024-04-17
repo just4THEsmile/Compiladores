@@ -125,6 +125,7 @@ stmt
 expr
     : NOT expr #NotExpr //
     | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
+    | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
     | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (AND|SMALLER) expr #BinaryExpr //
@@ -138,7 +139,7 @@ expr
     | value = FALSE #BooleanLiteral //
     | NEW INT '['expr']' #NewIntArray //
     | NEW classname=ID '('(expr (COMMA expr)*)?')' #NewObject //
-    | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
+
     | '[' (expr (COMMA expr)*)? ']' #Array //
     | 'this' #ThisRefExpr //
     ;

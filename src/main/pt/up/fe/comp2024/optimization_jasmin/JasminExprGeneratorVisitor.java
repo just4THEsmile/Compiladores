@@ -154,7 +154,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             code.append(NL);
             return null;
         }else{
-            visit(memberCallExpr.getJmmChild(0), code);
             if(memberCallExpr.getNumChildren() == 1) {
                 code.append("invokevirtual " + className + "/" + methodName + "()");
                 if (className.equals(table.getClassName())) {
@@ -181,6 +180,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append("V");
             }
             code.append(NL);
+
             return null;
         }
 
