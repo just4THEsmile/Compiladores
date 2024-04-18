@@ -246,7 +246,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         }else if (!varArgs.isEmpty()) {
             code.append("[I");
         }
-        code.append(")").append(getTypeReturnToStr(table.getReturnType(currentMethod))).append(NL);
+        code.append(")").append(get_parsed_class(getTypeReturnToStr(table.getReturnType(currentMethod)))).append(NL);
 
         // Add limits
         code.append(TAB).append(".limit stack 99").append(NL);
@@ -384,8 +384,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
                 break;
 
             default:
-                string.append("L").append(type.getName()).append(";");
-                return null;
+                string.append("L").append(get_parsed_class(type.getName())).append(";");
         }
         return string.toString();
     }

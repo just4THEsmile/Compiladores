@@ -1,10 +1,17 @@
 import io;
 import java.lang.Object;
-class Test {
+class Test extends Object{
 
 	public static void main(String[] args){
     	Test test;
 		test = new Test();
+		test.test();
+
 	}
+
+	public Object test(){
+
+        return (new Object());
+    }
 
 }

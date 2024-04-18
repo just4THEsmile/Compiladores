@@ -97,7 +97,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 break;
         }
 
-
         code.append(reg + NL);
 
         return null;
@@ -133,11 +132,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         for (var child : newObject.getChildren()) {
             this.visit(child, code);
         }
+
         code.append("new " + className + NL);
-        if (className.equals(table.getClassName())) {
-            code.append("dup" + NL);
-            code.append("invokespecial " + className + "/<init>()V" + NL);
-        }
+        code.append("dup" + NL);
+        code.append("invokespecial " + className + "/<init>()V" + NL);
+
         //code.append("invokespecial " + className + "/<init>()V" + NL);
         return null;
     }
@@ -244,12 +243,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 string.append("Ljava/lang/String;");
                 break;
             case "this":
-                string.append("L").append(table.getClassName()).append(";");
+                string.append("L").append(get_parsed_class(table.getClassName())).append(";");
                 break;
 
             default:
-                string.append("L").append(type.getName()).append(";");
-                return null;
+                string.append("L").append(get_parsed_class(type.getName())).append(";");
         }
         return string.toString();
     }

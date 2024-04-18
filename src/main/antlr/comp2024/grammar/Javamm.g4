@@ -74,6 +74,7 @@ varDecl
     | type name='main' SEMI
     | type name='length' SEMI
     | type name='string' SEMI
+    | type name='String' SEMI
     ;
 
 type
