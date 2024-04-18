@@ -34,6 +34,7 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.METHOD_CALL_EXPR, this::dealWithCallExpr);
         addVisit(Kind.IF_STMT, this::dealWithIf);
         addVisit(Kind.WHILE_STMT, this::dealWithWhile);
+        addVisit(Kind.LENGTH_EXPR, this::dealWithLenght);
 
 
 
@@ -482,7 +483,6 @@ public class Analyser extends AnalysisVisitor {
 
         List<Symbol> methodParams = table.getParameters(methodName);
         if (methodParams == null) {
-            // Tratar o caso em que os parâmetros do método são nulos
             return null;
         }
 
@@ -641,7 +641,15 @@ public class Analyser extends AnalysisVisitor {
         return null;
     }
 
-
+    private Void dealWithLenght(JmmNode node, SymbolTable table){
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+        if (!objectType.isArray()) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Length can only be used on arrays"));
+        }
+        return null;
+    }
 
 
 
