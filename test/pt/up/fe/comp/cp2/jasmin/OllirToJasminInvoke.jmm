@@ -1,14 +1,10 @@
 import io;
 import java.lang.Object;
-
 class Test {
 
-	public static void main(String[] args) {
-	    Object oi;
+	public static void main(String[] args){
     	Test test;
 		test = new Test();
-		oi = new Object();
-
 	}
 
 }

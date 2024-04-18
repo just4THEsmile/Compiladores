@@ -73,7 +73,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(".class ").append(className).append(NL).append(NL);
 
         if(table.getSuper() != null) {
-            code.append(".super ").append(table.getSuper()).append(NL).append(NL);
+            code.append(".super ").append(get_parsed_class(table.getSuper())).append(NL).append(NL);
         }else{
             code.append(".super java/lang/Object").append(NL);
         }
@@ -88,7 +88,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
                     aload_0
                     invokespecial""");
         if(table.getSuper() != null) {
-            code.append(" ").append(table.getSuper()).append("""
+            code.append(" ").append(get_parsed_class(table.getSuper())).append("""
             /<init>()V
             return
                 .end method
@@ -399,8 +399,13 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String get_parsed_class(String class_name){
-        if(class_name.contains(".")){
-            return class_name.split("\\.")[1];
+        for(String import_class : table.getImports()){
+            if(import_class.contains(class_name)){
+                String s=import_class;
+                // remove , from import
+                s = s.replace(", ", "/").replace("[", "").replace("]", "");
+                return s;
+            }
         }
         return class_name;
     }
