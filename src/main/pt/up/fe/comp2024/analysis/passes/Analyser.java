@@ -34,7 +34,7 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.METHOD_CALL_EXPR, this::dealWithCallExpr);
         addVisit(Kind.IF_STMT, this::dealWithIf);
         addVisit(Kind.WHILE_STMT, this::dealWithWhile);
-        addVisit(Kind.LENGTH_EXPR, this::dealWithLenght);
+        addVisit(Kind.LENGTH_EXPR, this::dealWithLength);
 
 
 
@@ -641,8 +641,13 @@ public class Analyser extends AnalysisVisitor {
         return null;
     }
 
-    private Void dealWithLenght(JmmNode node, SymbolTable table){
+    private Void dealWithLength(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
+        if (method.equals("length")) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Length cannot be used as a method name"));
+            return null;
+        }
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
         if (!objectType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
@@ -650,6 +655,7 @@ public class Analyser extends AnalysisVisitor {
         }
         return null;
     }
+
 
 
 
