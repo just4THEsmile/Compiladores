@@ -78,7 +78,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(".super java/lang/Object").append(NL);
         }
         for(Symbol field : table.getFields()){
-            code.append(".field ").append("private static").append(field.getName()).append(" ").append(this.getTypeToStr(field.getType())).append(NL);
+            code.append(".field ").append("public static").append(field.getName()).append(" ").append(this.getTypeToStr(field.getType())).append(NL);
         }
 
         // generate a single constructor method
@@ -396,6 +396,13 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             return string.toString();
         }
         return getTypeToStr(type);
+    }
+
+    private String get_parsed_class(String class_name){
+        if(class_name.contains(".")){
+            return class_name.split("\\.")[1];
+        }
+        return class_name;
     }
 
 

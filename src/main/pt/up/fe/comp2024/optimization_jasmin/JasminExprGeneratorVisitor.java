@@ -129,7 +129,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         return null;
     }
     private Void visitNewObject(JmmNode newObject, StringBuilder code) {
-        var className = newObject.get("classname");
+        var className = get_parsed_class(newObject.get("classname"));
         for (var child : newObject.getChildren()) {
             this.visit(child, code);
         }
@@ -143,7 +143,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
     private Void visitMemberCallExpr(JmmNode memberCallExpr, StringBuilder code) {
         var methodName = memberCallExpr.get("name");
-        var className = TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod).getName();
+        var className = get_parsed_class(TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod).getName());
         Type t = TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod);
         if ((TypeUtils.check_for_imports_type(t, table)) && memberCallExpr.getJmmChild(0).getChildren().isEmpty()) {
             if(memberCallExpr.getNumChildren() == 1) {
@@ -264,6 +264,18 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             return string.toString();
         }
         return getTypeToStr(type);
+    }
+
+    private String get_parsed_class(String class_name){
+        for(String import_class : table.getImports()){
+            if(import_class.contains(class_name)){
+                String s=import_class;
+                // remove , from import
+                s = s.replace(", ", "/").replace("[", "").replace("]", "");
+                return s;
+            }
+        }
+        return class_name;
     }
 
 
