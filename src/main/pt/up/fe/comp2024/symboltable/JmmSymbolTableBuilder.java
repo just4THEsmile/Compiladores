@@ -200,7 +200,7 @@ public class JmmSymbolTableBuilder {
         var imports = new ArrayList<String>();
         importsDecl.forEach(importDecl -> {
 
-                    imports.add(importDecl.get("value"));
+                    imports.add(importDecl.get("value").replace("]","").replace("[",""));
                 });
 
 

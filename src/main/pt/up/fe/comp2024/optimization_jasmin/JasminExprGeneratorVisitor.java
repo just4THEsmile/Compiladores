@@ -68,13 +68,14 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
 
     private Void visitVarRefExpr(JmmNode varRefExpr, StringBuilder code) {
-        var name = varRefExpr.get("name");
+        String name = varRefExpr.get("name");
         var fields = table.getFields();
         // get register
         var reg = currentRegisters.get(name);
         var imports = table.getImports();
         Type t = TypeUtils.getVarExprType(varRefExpr, table, CurrentMethod);
-        if ((TypeUtils.check_for_imports_type(t, table))) {
+
+        if ((TypeUtils.check_for_imports_type(new Type(name,false), table))) {
             return null;
         }
         for (var field : fields) {
@@ -91,13 +92,14 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         switch (t.getName()) {
             case "int","boolean" :
                 code.append("iload ");
+                code.append(currentRegisters.get(name) + NL);
                 break;
             default :
                 code.append("aload ");
+                code.append(currentRegisters.get(name) + NL);
                 break;
         }
 
-        code.append(reg + NL);
 
         return null;
     }

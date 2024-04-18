@@ -399,7 +399,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String get_parsed_class(String class_name){
         for(String import_class : table.getImports()){
-            if(import_class.contains(class_name)){
+            if(import_class.endsWith(class_name)){
                 String s=import_class;
                 // remove , from import
                 s = s.replace(", ", "/").replace("[", "").replace("]", "");

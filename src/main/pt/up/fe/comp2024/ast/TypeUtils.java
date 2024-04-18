@@ -79,11 +79,11 @@ public class TypeUtils {
             }
             case NEW_OBJECT -> {
                 var t = expr.get("classname");
-                if(table.getClassName().contains(t)){
+                if(table.getClassName().endsWith(t)){
                     yield new Type(t, false);
                 }
                 for(var i : table.getImports()){
-                    if(i.contains(t)){
+                    if(i.endsWith(t)){
                         yield new Type(t, false);
                     }
                 }
@@ -167,7 +167,7 @@ public class TypeUtils {
         var imports= table.getImports();
         String name=varRefExpr.get("name");
         for(String i : imports){
-            if(i.contains(name)){
+            if(i.endsWith(name)){
                 return new Type(name, false);
             }
         }
@@ -248,7 +248,7 @@ public class TypeUtils {
             return false;
         }
         for(String i : imports){
-            if(i.contains(t1.getName())){
+            if(i.endsWith(t1.getName())){
                 return true;
             }
         }
@@ -259,12 +259,12 @@ public class TypeUtils {
         if (t1.getName() == null){
             return false;
         }
-        if(!t1.getName().contains("#")){
+        if(!t1.getName().startsWith("#")){
             return false;
         }
         String imp=t1.getName().replace("#", "");
         for(String i : imports){
-            if(i.contains(imp)){
+            if(i.endsWith(imp)){
                 return true;
             }
         }

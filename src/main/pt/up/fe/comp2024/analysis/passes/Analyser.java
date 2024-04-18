@@ -509,7 +509,13 @@ public class Analyser extends AnalysisVisitor {
         String method= get_Caller_method(node);
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
         Type returntype=table.getReturnType(node.getParent().get("name"));
-        if (!objectType.equals(returntype)){
+        if (objectType.getName()==null || returntype.getName()==null){
+            clearReports();
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Wrong Return type " + objectType.getName()));
+            return null;
+        }
+        if (!objectType.getName().equalsIgnoreCase(returntype.getName())){
             clearReports();
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Wrong Return type " + objectType.getName()));
