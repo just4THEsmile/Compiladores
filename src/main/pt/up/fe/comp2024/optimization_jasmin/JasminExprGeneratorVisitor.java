@@ -137,9 +137,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 return null;
             }
             var children = memberCallExpr.getChildren();
-            for (int i = 1; i<children.size(); i++) {
-                this.visit(children.get(i), code);
-            }
             code.append("invokestatic " + className + "/" + methodName + "(");
             for (int i = 1; i<children.size(); i++) {
                 t = TypeUtils.getExprType(children.get(i), table, CurrentMethod);
@@ -165,9 +162,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 return null;
             }
             var children = memberCallExpr.getChildren();
-            for (int i = 1; i<children.size(); i++) {
-                this.visit(children.get(i), code);
-            }
             code.append("invokevirtual " + className + "/" + methodName + "(");
             for (int i = 1; i<children.size(); i++) {
                 t = TypeUtils.getExprType(children.get(i), table, CurrentMethod);
