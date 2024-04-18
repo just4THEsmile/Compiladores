@@ -47,6 +47,8 @@ public class JmmSymbolTableBuilder {
                     }else {
                         map.put(method.get("name"), new Type(method.getChildren("Type").get(0).get("name"), false));
                     }
+                    }else{
+                        map.put(method.get("name"), new Type("void", false));
                     }
 
                 });

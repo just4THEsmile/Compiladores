@@ -19,6 +19,7 @@ class MethodsAndFields{
 	public int[] all(int a, boolean b, MethodsAndFields maf){
 		int[] c;
 		return c;
+
 	}
 	
 	public static void main(String[] args){

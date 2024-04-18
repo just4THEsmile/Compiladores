@@ -132,7 +132,6 @@ expr
     | value=INTEGER #IntegerLiteral //
     | name=ID #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
-    | expr op=SMALLER expr #BinaryExpr //
     | expr '.' 'length' #LengthExpr //
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //

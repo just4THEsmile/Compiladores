@@ -90,7 +90,7 @@ public class TypeUtils {
                 yield new Type(null, false);
             }
             case METHOD_CALL_EXPR -> {
-                var method = expr.get("name");
+                var method = expr.get("funcname");
                 for(var m : table.getMethods()){
                     if(m.equals(method)){
                         yield table.getReturnType(m);
@@ -133,7 +133,7 @@ public class TypeUtils {
                     return new Type(null, false);
                 }
 
-            case "&&", "<" :
+            case "&&":
                 if ( (getExprType(binaryExpr.getChildren().get(0), table, method_name).getName().equals("boolean") &&
                         !getExprType(binaryExpr.getChildren().get(0), table, method_name).isArray() &&
                         getExprType(binaryExpr.getChildren().get(1), table, method_name).getName().equals("boolean") &&
@@ -144,6 +144,18 @@ public class TypeUtils {
                 } else {
                     return new Type(null, false);
                 }
+            case "<":
+                if ( (getExprType(binaryExpr.getChildren().get(0), table, method_name).getName().equals("int") &&
+                    !getExprType(binaryExpr.getChildren().get(0), table, method_name).isArray() &&
+                    getExprType(binaryExpr.getChildren().get(1), table, method_name).getName().equals("int") &&
+                    !getExprType(binaryExpr.getChildren().get(1), table, method_name).isArray() ) ||
+                    check_for_imports_type(getExprType(binaryExpr.getChildren().get(0), table, method_name),table) ||
+                    check_for_imports_type(getExprType(binaryExpr.getChildren().get(1), table, method_name),table)) {
+                return new Type("boolean", false);
+            } else {
+                return new Type(null, false);
+            }
+
             default :
                 return new Type(null, false);
         }
