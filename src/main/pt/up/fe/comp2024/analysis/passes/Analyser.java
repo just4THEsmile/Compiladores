@@ -12,10 +12,7 @@ import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Analyser extends AnalysisVisitor {
@@ -34,6 +31,7 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.METHOD_CALL_EXPR, this::dealWithCallExpr);
         addVisit(Kind.IF_STMT, this::dealWithIf);
         addVisit(Kind.WHILE_STMT, this::dealWithWhile);
+        addVisit(Kind.LENGTH_EXPR, this::dealWithLength);
 
 
 
@@ -482,7 +480,6 @@ public class Analyser extends AnalysisVisitor {
 
         List<Symbol> methodParams = table.getParameters(methodName);
         if (methodParams == null) {
-            // Tratar o caso em que os parâmetros do método são nulos
             return null;
         }
 
@@ -551,6 +548,16 @@ public class Analyser extends AnalysisVisitor {
 
             }
 
+            if (methodParams.isEmpty() && !node.getChildren().isEmpty()) {
+                int line = NodeUtils.getLine(node);
+                int column = NodeUtils.getColumn(node);
+                String message = "Method " + method_called + " expects no parameters but received " + node.getChildren().size() + " parameters";
+                addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                return null;
+            }
+
+            Set<String> paramNames = new HashSet<>();
+
             for (int i = 0; i < methodParams.size(); i++) {
                 Type paramType = TypeUtils.getExprType(node.getJmmChild(i), table,null);
                 Type expectedType = methodParams.get(i).getType();
@@ -559,6 +566,16 @@ public class Analyser extends AnalysisVisitor {
                     int line = NodeUtils.getLine(node);
                     int column = NodeUtils.getColumn(node);
                     String message = "Expected parameter of type " + expectedType.getName() + " in method " + method_called + " but found " + paramType.getName();
+                    addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                }
+
+                JmmNode paramNode = node.getJmmChild(i);
+                String paramName = paramNode.get("paramname");
+
+                if (!paramNames.add(paramName)) {
+                    int line = NodeUtils.getLine(paramNode);
+                    int column = NodeUtils.getColumn(paramNode);
+                    String message = "Duplicate parameter name '" + paramName + "' in method call";
                     addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
                 }
             }
@@ -618,6 +635,15 @@ public class Analyser extends AnalysisVisitor {
             }
         }
 
+        if (node.get("name").equals("length")) {
+            Type objectType2 = TypeUtils.getExprType(node.getJmmChild(0), table, null);
+            if (!objectType2.isArray()) {
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                        "Method 'length' can only be used on arrays"));
+            }
+            return null;
+        }
+
 
         return null;
     }
@@ -640,6 +666,20 @@ public class Analyser extends AnalysisVisitor {
         }
         return null;
     }
+
+    private Void dealWithLength(JmmNode node, SymbolTable table) {
+        JmmNode exprNode = node.getJmmChild(0);
+        String method = get_Caller_method(node);
+
+        Type exprType = TypeUtils.getExprType(exprNode, table, method);
+        if (!exprType.isArray()) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Length can only be used on arrays"));
+        }
+
+        return null;
+    }
+
 
 
 
