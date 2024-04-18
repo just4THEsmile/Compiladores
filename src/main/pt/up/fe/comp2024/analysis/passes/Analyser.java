@@ -635,6 +635,15 @@ public class Analyser extends AnalysisVisitor {
             }
         }
 
+        if (node.get("name").equals("length")) {
+            Type objectType2 = TypeUtils.getExprType(node.getJmmChild(0), table, null);
+            if (!objectType2.isArray()) {
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                        "Method 'length' can only be used on arrays"));
+            }
+            return null;
+        }
+
 
         return null;
     }
