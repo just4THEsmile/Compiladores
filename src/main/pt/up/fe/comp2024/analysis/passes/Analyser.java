@@ -12,10 +12,7 @@ import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.NodeUtils;
 import pt.up.fe.comp2024.ast.TypeUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Analyser extends AnalysisVisitor {
@@ -551,6 +548,16 @@ public class Analyser extends AnalysisVisitor {
 
             }
 
+            if (methodParams.isEmpty() && !node.getChildren().isEmpty()) {
+                int line = NodeUtils.getLine(node);
+                int column = NodeUtils.getColumn(node);
+                String message = "Method " + method_called + " expects no parameters but received " + node.getChildren().size() + " parameters";
+                addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                return null;
+            }
+
+            Set<String> paramNames = new HashSet<>();
+
             for (int i = 0; i < methodParams.size(); i++) {
                 Type paramType = TypeUtils.getExprType(node.getJmmChild(i), table,null);
                 Type expectedType = methodParams.get(i).getType();
@@ -559,6 +566,16 @@ public class Analyser extends AnalysisVisitor {
                     int line = NodeUtils.getLine(node);
                     int column = NodeUtils.getColumn(node);
                     String message = "Expected parameter of type " + expectedType.getName() + " in method " + method_called + " but found " + paramType.getName();
+                    addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+                }
+
+                JmmNode paramNode = node.getJmmChild(i);
+                String paramName = paramNode.get("paramname");
+
+                if (!paramNames.add(paramName)) {
+                    int line = NodeUtils.getLine(paramNode);
+                    int column = NodeUtils.getColumn(paramNode);
+                    String message = "Duplicate parameter name '" + paramName + "' in method call";
                     addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
                 }
             }
