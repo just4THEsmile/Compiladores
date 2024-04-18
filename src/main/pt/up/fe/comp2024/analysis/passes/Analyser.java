@@ -660,18 +660,22 @@ public class Analyser extends AnalysisVisitor {
 
     private Void dealWithLength(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+
         if (method.equals("length")) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Length cannot be used as a method name"));
             return null;
         }
-        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+
         if (!objectType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Length can only be used on arrays"));
         }
+
         return null;
     }
+
 
 
 
