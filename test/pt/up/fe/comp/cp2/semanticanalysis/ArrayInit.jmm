@@ -3,15 +3,20 @@ import io;
 class A extends io{
     int length;
     int[] i;
+    boolean[] b;
 
     int foo(main main) {
         io Io;
         length = 1;
+        b = new boolean[10];
         i = new int[10];
         length = i[length];
 
 
-        while (i[1]) {
+        while (b[1]) {
+        }
+        if(i[1]) {
+        } else {
         }
 
         Io.Simple();

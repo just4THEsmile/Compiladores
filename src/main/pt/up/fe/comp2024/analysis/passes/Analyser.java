@@ -851,7 +851,7 @@ public class Analyser extends AnalysisVisitor {
     private Void dealWithWhile(JmmNode node, SymbolTable table){
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
-        if (!(objectType.getName().equals("int") || objectType.getName().equals("boolean")) || objectType.isArray()) {
+        if (!( objectType.getName().equals("boolean")) || objectType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "While condition must be a boolean expression"));
         }

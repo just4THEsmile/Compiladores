@@ -85,7 +85,7 @@ public class TypeUtils {
                     yield new Type(null, false);
                 }
                 if((t.getName().equals("int") || check_for_imports_type(t,table)) && !t.isArray()){
-                    yield new Type("int", true);
+                    yield new Type(expr.get("name"), true);
                 }
                 yield new Type(null, true);
             }

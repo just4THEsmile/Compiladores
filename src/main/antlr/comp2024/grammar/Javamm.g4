@@ -138,7 +138,7 @@ expr
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //
-    | NEW INT '['expr']' #NewIntArray //
+    | NEW name=(ID | 'main'| INT | BOOLEAN) '['expr']' #NewIntArray //
     | NEW classname=(ID | 'main') '('(expr (COMMA expr)*)?')' #NewObject //
 
     | '[' (expr (COMMA expr)*)? ']' #Array //
