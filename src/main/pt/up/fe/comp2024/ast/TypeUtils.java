@@ -45,6 +45,9 @@ public class TypeUtils {
             case ARRAY_ACCESS_EXPR -> {
                 var t = getExprType(expr.getChildren().get(0), table, method_name);
                 var t2 = getExprType(expr.getChildren().get(1), table, method_name);
+                if(t.getName()==null || t2.getName()==null){
+                    yield new Type(null, false);
+                }
                 if((t.isArray() || check_for_imports_type(t,table)) && ((t2.getName().equals("int") && !t2.isArray()) || check_for_imports_type(t2,table) )){
                         if (t.getName()=="_varargs"){
                             yield new Type("int", false);
@@ -63,7 +66,13 @@ public class TypeUtils {
                 }else{
                     t = getExprType(expr.getChildren().get(0), table, method_name);
                 }
+                if(t.getName()==null){
+                    yield new Type(null, false);
+                }
                 for(var c : expr.getChildren()){
+                    if (getExprType(c, table, method_name).getName()==null){
+                        yield new Type(null, false);
+                    }
                     if(!getExprType(c, table, method_name).getName().equals(t.getName()) && !getExprType(c, table, method_name).isArray() && !check_for_imports_type(getExprType(c, table,method_name),table)){
                         yield new Type(null, false);
                     }
@@ -72,6 +81,9 @@ public class TypeUtils {
             }
             case NEW_INT_ARRAY -> {
                 var t = getExprType(expr.getChildren().get(0), table, method_name);
+                if (t.getName()==null){
+                    yield new Type(null, false);
+                }
                 if((t.getName().equals("int") || check_for_imports_type(t,table)) && !t.isArray()){
                     yield new Type("int", true);
                 }
@@ -79,6 +91,9 @@ public class TypeUtils {
             }
             case NEW_OBJECT -> {
                 var t = expr.get("classname");
+                if (t==null){
+                    yield new Type(null, false);
+                }
                 if(table.getClassName().endsWith(t)){
                     yield new Type(t, false);
                 }

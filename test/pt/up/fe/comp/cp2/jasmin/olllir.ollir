@@ -1,21 +1,21 @@
+import imp.Obj;
 import io;
-import A;
-CompileMethodInvocation {
 
-.field public b.array.i32;
-.field public c.i32;
+class Simple {
 
-.method public static main(args.array.String).V {
-ret.V ;
-}
+    public int add(int a, int b){
+        int c;
+        boolean flag;
+        Simple s;
+        Obj obj;
+        s = new Simple();
+        obj = new Obj();
+        this.test(1);
+        obj.test(1);
+        return c;
+    }
 
-.method public foo().i32 {
-a.i32 :=.i32 1.i32;
-invokestatic(io, "println", a.i32).V;
-ret.i32 0.i32;
-}
-
-.construct CompileMethodInvocation().V {
-invokespecial(this, "").V;
-}
+    public int test(int a){
+        return 1;
+    }
 }

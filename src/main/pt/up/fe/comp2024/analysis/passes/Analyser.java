@@ -678,6 +678,11 @@ public class Analyser extends AnalysisVisitor {
         String method = get_Caller_method(node);
 
         Type exprType = TypeUtils.getExprType(exprNode, table, method);
+        if(exprType.getName()==null){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Error variable not declared " + exprType.getName()));
+            return null;
+        }
         if (!exprType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Length can only be used on arrays"));
