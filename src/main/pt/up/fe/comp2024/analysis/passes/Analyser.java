@@ -53,7 +53,7 @@ public class Analyser extends AnalysisVisitor {
         String importName = node.get("value").substring(s+1).replace("[","").replace("]","").replace(" ","");
         boolean isImport=false;
         for (String import_ : table.getImports()) {
-            if (import_.equals(importName)) {
+            if (import_.endsWith(importName)) {
                 if(isImport){
                     addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                             "Import duplicated " + importName));
@@ -62,9 +62,9 @@ public class Analyser extends AnalysisVisitor {
                 isImport=true;
             }
         }
-        if( importName.equals(table.getClassName())){
+        if( importName.endsWith(table.getClassName())){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "Import name has the same name of class" + importName));
+                    "Import name has the same name of class " + importName));
             return null;
         }
         return null;
