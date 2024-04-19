@@ -80,36 +80,51 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         for(Symbol field : table.getFields()){
             code.append(".field ").append("public ").append(field.getName()).append(" ").append(this.getTypeToStr(field.getType())).append(NL);
         }
-
-        // generate a single constructor method
-        code.append( """
-                ;default constructor
-                .method public <init>()V
-                    aload_0
-                    invokespecial""");
-        if(table.getSuper() != null) {
-            code.append(" ").append(get_parsed_class(table.getSuper())).append("""
-            /<init>()V
-            return
-                .end method
-            """);
-        }else{
-            code.append( """
-                 java/lang/Object/<init>()V
-                    return
-                .end method
-                """);
-        }
-
-
-        // generate code for all other methods
+        // to find constructor
+        boolean found=false;
         for (var method : classDecl.getChildren()) {
             if(method.getKind().equals("VarDecl")){
                 continue;
             }else{
-                code.append(visit(method));
+                if(method.get("name").equals(table.getClassName())){
+                    code.append(".method public <init>()V").append(NL);
+                    code.append(TAB).append("aload_0").append(NL);
+                    code.append(TAB).append("invokespecial ").append(get_parsed_class(table.getSuper())).append("/<init>(");
+                    for(Symbol param: table.getParameters(method.get("name"))){
+                        code.append(getTypeToStr(param.getType()));
+                    }
+                    code.append(")V").append(NL);
+                    code.append(TAB).append("return").append(NL);
+                    code.append(".end method").append(NL).append(NL);
+                    found=true;
+                    continue;
+                }
+            }
+            code.append(visit(method));
+        }
+        if (!found){
+            // generate a single constructor method
+            code.append( """
+                ;default constructor
+                .method public <init>()V
+                    aload_0
+                    invokespecial""");
+            if(table.getSuper() != null) {
+                code.append(" ").append(get_parsed_class(table.getSuper())).append("""
+            /<init>()V
+            return
+                .end method
+            """);
+            }else{
+                code.append( """
+                 java/lang/Object/<init>()V
+                    return
+                .end method
+                """);
             }
         }
+
+
 
         return code.toString();
     }
@@ -259,6 +274,9 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
             code.append(instCode);
         }
+        if (table.getReturnType(currentMethod).getName().equals("void")){
+            code.append("return").append(NL);
+        }
 
         code.append(".end method\n");
 
@@ -398,6 +416,9 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String get_parsed_class(String class_name){
+        if (class_name==null){
+            return "java/lang/Object";
+        }
         for(String import_class : table.getImports()){
             if(import_class.endsWith(class_name)){
                 String s=import_class;

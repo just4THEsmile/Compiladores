@@ -4,15 +4,20 @@ class Test {
     Test t;
     A b;
 
-	public static void main() {
+	public static void main(String[] a) {
     	Test test;
 	    test = new Test();
 	}
 
-	public A test1() {
+	public static void Test() {
+        A a;
+        a = test1();
+    }
+
+	public void test1() {
 	    A a;
         a = new A();
-        return a;
+
 	}
 
 

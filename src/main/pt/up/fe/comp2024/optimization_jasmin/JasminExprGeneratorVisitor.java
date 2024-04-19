@@ -81,7 +81,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         for (var field : fields) {
             if (field.getName().equals(name)) {
                 code.append("aload 0" + NL);
-                code.append("getfield " + table.getClassName() + "/" + name + " " + getTypeToStr(field.getType()) + NL);
+                code.append("getfield " + table.getClassName() + "/" + name+" " + getTypeToStr(field.getType()) + NL);
                 return null;
             }
         }
