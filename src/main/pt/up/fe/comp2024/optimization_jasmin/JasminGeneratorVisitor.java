@@ -70,7 +70,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // generate class name
         var className = table.getClassName();
-        code.append(".class ").append(className).append(NL).append(NL);
+        code.append(".class public ").append(className).append(NL).append(NL);
 
         if(table.getSuper() != null) {
             code.append(".super ").append(get_parsed_class(table.getSuper())).append(NL).append(NL);
