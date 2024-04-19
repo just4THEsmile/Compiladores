@@ -848,15 +848,33 @@ public class Analyser extends AnalysisVisitor {
         }
         return null;
     }
-    private Void dealWithWhile(JmmNode node, SymbolTable table){
+    private Void dealWithWhile(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
         if (!( objectType.getName().equals("boolean")) || objectType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "While condition must be a boolean expression"));
+
         }
+
+        if (node.getKind().equals(Kind.WHILE_STMT.getNodeName())) {
+            JmmNode whileBody = node.getJmmChild(1);
+            for (JmmNode statement : whileBody.getChildren()) {
+                if (statement.getKind().equals(Kind.ARRAY_ACCESS_EXPR.getNodeName())) {
+                    JmmNode indexExpr = statement.getJmmChild(1);
+                    String methodI = get_Caller_method(statement);
+                    Type indexType = TypeUtils.getExprType(indexExpr, table, methodI);
+                    if (!indexType.getName().equals("int")) {
+                        addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(indexExpr), NodeUtils.getColumn(indexExpr),
+                                "Array index must be an integer"));
+                    }
+                }
+            }
+        }
+
         return null;
     }
+
 
     private Void dealWithLength(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
@@ -874,15 +892,6 @@ public class Analyser extends AnalysisVisitor {
 
         return null;
     }
-
-
-
-
-
-
-
-
-
 
 
 }
