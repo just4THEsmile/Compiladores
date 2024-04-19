@@ -288,6 +288,17 @@ public class Analyser extends AnalysisVisitor {
         String methodName = methodNode.get("name");
         String methodSignature = getMethodSignature(methodNode);
 
+        // check if method is duplicated
+        for (String method : table.getMethods()) {
+            if (method.equals(methodName)) {
+                int line = methodNode.get("lineStart") != null ? Integer.parseInt(methodNode.get("lineStart")) : -1;
+                int column = methodNode.get("colStart") != null ? Integer.parseInt(methodNode.get("colStart")) : -1;
+                String message = "Method '" + methodName + "' is already declared";
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, line, column, message));
+                return null;
+            }
+        }
+
         // Verificar se o método está presente na tabela de símbolos
         if (!table.getMethods().contains(methodName)) {
             SymbolTable currentTable = table;

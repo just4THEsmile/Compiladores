@@ -1,23 +1,28 @@
-import jj.io;
-import java.okkk;
+import io;
 
-class okkk extends io{
-    main length;
-    main foo(main a) {
+class A extends io{
+    int length;
+
+    void foo(main main) {
         io Io;
-        main main;
-
+        length = 1;
 
         this;
-        main;
-        return length;
-        this.Simple();
-        main.Simple();
+
         Io.Simple();
     }
 
-    public static void main(String[] a){
+    public static void main(String[] length){
 
 
+    }
+
+    void foo() {
+        io Io;
+        length = 1;
+
+        this;
+
+        Io.Simple();
     }
 }
