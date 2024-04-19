@@ -4,15 +4,18 @@ class A extends io{
     int length;
     int[] i;
 
-    void foo(main main) {
+    int foo(main main) {
         io Io;
         length = 1;
         i = new int[10];
-        length = i[i];
+        length = i[length];
 
-        this;
+
+        while (i[1]) {
+        }
 
         Io.Simple();
+        return i[length];
     }
 
     public static void main(String[] length){
