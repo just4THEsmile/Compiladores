@@ -78,7 +78,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(".super java/lang/Object").append(NL);
         }
         for(Symbol field : table.getFields()){
-            code.append(".field ").append("public static").append(field.getName()).append(" ").append(this.getTypeToStr(field.getType())).append(NL);
+            code.append(".field ").append("public static ").append(field.getName()).append(" ").append(this.getTypeToStr(field.getType())).append(NL);
         }
 
         // generate a single constructor method
@@ -128,8 +128,11 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     // initialize register map and set parameters
     currentRegisters = new HashMap<>();
-    if (mainMethodDecl.get("arg")!=null){
+    if (mainMethodDecl.hasAttribute("arg")){
         currentRegisters.put(mainMethodDecl.get("arg"), nextRegister);
+        nextRegister++;
+    }else{
+        currentRegisters.put("args", nextRegister);
         nextRegister++;
     }
     for (var local : table.getLocalVariables(currentMethod)){
@@ -148,7 +151,9 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     // TODO: Hardcoded param types and return type, needs to be expanded
     code.append("\n.method ").append(modifier).append(modifierStatic).append(methodName).append("(");
-    if (mainMethodDecl.get("arg")!=null){
+    if (mainMethodDecl.hasAttribute("arg")){
+        code.append("[Ljava/lang/String;");
+    }else{
         code.append("[Ljava/lang/String;");
     }
     code.append(")V").append(NL);
