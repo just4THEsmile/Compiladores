@@ -65,7 +65,9 @@ classDecl
     : CLASS name=( ID | 'main') ('extends' parent=ID)?
         LCURLY
         varDecl*
-        (mainMethodDecl | methodDecl)*
+        methodDecl*
+        mainMethodDecl?
+        methodDecl*
         RCURLY
     ;
 

@@ -32,6 +32,7 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.IF_STMT, this::dealWithIf);
         addVisit(Kind.WHILE_STMT, this::dealWithWhile);
         addVisit(Kind.LENGTH_EXPR, this::dealWithLength);
+        addVisit(Kind.THIS_REF_EXPR, this::dealWithThis);
 
 
 
@@ -57,6 +58,17 @@ public class Analyser extends AnalysisVisitor {
             addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
         }
 
+        return null;
+    }
+
+    private Void dealWithThis(JmmNode node, SymbolTable table) {
+        String method = get_Caller_method(node);
+        if (method.equals("main")) {
+            int line = NodeUtils.getLine(node);
+            int column = NodeUtils.getColumn(node);
+            String message = "Found \"this\" in static main function";
+            addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+        }
         return null;
     }
 
@@ -423,6 +435,17 @@ public class Analyser extends AnalysisVisitor {
     private Void Check_decl(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getVarExprType(node, table, method);
+
+        //check if var is field
+        for (Symbol field : table.getFields()) {
+            if (field.getName().equals(node.get("name"))) {
+                if(method.equals("main")){
+                    addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                            "Field cannot be accessed in static main function"));
+                }
+            }
+        }
+
         if (objectType.getName()==null){
             clearReports();
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
@@ -689,6 +712,8 @@ public class Analyser extends AnalysisVisitor {
 
         return null;
     }
+
+
 
 
 

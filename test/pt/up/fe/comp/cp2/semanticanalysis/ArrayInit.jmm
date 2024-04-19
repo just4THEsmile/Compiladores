@@ -5,11 +5,14 @@ class main {
     main foo(main main) {
         main length;
         length = new main();
-
+        length = new main();
+        this;
+        main;
         return length;
     }
 
     public static void main(String[] length) {
+    length;
 
     }
 }
