@@ -304,6 +304,27 @@ public class Analyser extends AnalysisVisitor {
                 isMethod=true;
             }
         }
+         int numreturn=1;
+        // check if method has multiple return
+        if (Objects.equals(table.getReturnType(methodName).getName(), "void")){
+            numreturn=0;
+
+        }
+        if (methodNode.getChildren("ReturnStmt").size() > numreturn) {
+            int line = methodNode.get("lineStart") != null ? Integer.parseInt(methodNode.get("lineStart")) : -1;
+            int column = methodNode.get("colStart") != null ? Integer.parseInt(methodNode.get("colStart")) : -1;
+            String message = "Method '" + methodName + "' has multiple return statements";
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, line, column, message));
+        }
+        if(numreturn>0){
+            var test=methodNode.getChildren().get(methodNode.getChildren().size() - 1);
+            if (!Objects.equals(methodNode.getChildren().get(methodNode.getChildren().size() - 1).getKind(), "ReturnStmt")){
+                int line = methodNode.get("lineStart") != null ? Integer.parseInt(methodNode.get("lineStart")) : -1;
+                int column = methodNode.get("colStart") != null ? Integer.parseInt(methodNode.get("colStart")) : -1;
+                String message = "Method '" + methodName + "' return statement must be the last statement";
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, line, column, message));
+            }
+        }
 
         // Verificar se o método está presente na tabela de símbolos
         if (!table.getMethods().contains(methodName)) {
@@ -464,6 +485,10 @@ public class Analyser extends AnalysisVisitor {
 
     private Void Check_Assign_STM(JmmNode assign_stm, SymbolTable table) {
         String MethodName = get_Caller_method(assign_stm);
+        if(!assign_stm.getJmmChild(0).getKind().equals("VarRefExpr")){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
+                    "Error on assignment " + assign_stm.getJmmChild(0).getKind()));
+        }
 
 
         Type exp1 = TypeUtils.getExprType(assign_stm.getChildren().get(0),table,MethodName);

@@ -17,12 +17,14 @@ class A extends io{
 
     }
 
-    void foo() {
+    io fooo() {
         io Io;
         length = 1;
 
         this;
 
         Io.Simple();
+        return Io;
+        return Io;
     }
 }
