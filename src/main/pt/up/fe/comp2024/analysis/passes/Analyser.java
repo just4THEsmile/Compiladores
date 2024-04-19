@@ -73,7 +73,7 @@ public class Analyser extends AnalysisVisitor {
     private Void visitVarDecl(JmmNode varDecl, SymbolTable table) {
         String method = get_Caller_method(varDecl);
         boolean isField=false;
-
+        boolean isParam=false;
         boolean isLocal=false;
         if(method==null){ // is field or
             // check form reapeated fields
@@ -87,18 +87,50 @@ public class Analyser extends AnalysisVisitor {
                     isField=true;
                 }
             }
-        }
-        if(isField){
+            for (String method_ : table.getMethods()) {
+                method = method_;
+
+                for (Symbol local : table.getLocalVariables(method)) {
+                    if (local.getName().equals(varDecl.get("name"))) {
+                        if ( isField) {
+                            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
+                                    "Variable duplicated " + varDecl.get("name")));
+                            return null;
+                        }
+                        isLocal = true;
+                    }
+                }
+                for (Symbol param : table.getParameters(method)) {
+                    if (param.getName().equals(varDecl.get("name"))) {
+                        if ((isLocal ) || (isField )) {
+                            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
+                                    "Variable duplicated " + varDecl.get("name")));
+                            return null;
+                        }
+                        isParam = true;
+                    }
+                }
+            }
             return null;
         }
         for (Symbol local : table.getLocalVariables(method) ){
             if (local.getName().equals(varDecl.get("name"))){
-                if(isLocal){
+                if(isLocal && isField){
                     addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
                             "Variable duplicated " + varDecl.get("name")));
                     return null;
                 }
                 isLocal=true;
+            }
+        }
+        for (Symbol param : table.getParameters(method) ){
+            if (param.getName().equals(varDecl.get("name"))){
+                if((isLocal && isParam) || (isField && isParam)){
+                    addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
+                            "Variable duplicated " + varDecl.get("name")));
+                    return null;
+                }
+                isParam=true;
             }
         }
 

@@ -1,11 +1,12 @@
 import io;
 import java.util.ok;
-class ok extends io{
+class okkk extends io{
     main length;
-
+    main main;
     main foo(main main) {
         io Io;
         main length;
+        main main;
 
         this;
         main;
