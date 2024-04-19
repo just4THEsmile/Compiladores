@@ -19,6 +19,7 @@ public class Analyser extends AnalysisVisitor {
     @Override
     public void buildVisitor() {
         addVisit(Kind.VAR_DECL, this::visitVarDecl);
+        addVisit(Kind.ARRAY_ACCESS_EXPR, this::visitArrayAccessExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
         addVisit(Kind.METHOD_DECL, this::visitMethod);
         addVisit(Kind.ASSIGN_STMT, this::Check_Assign_STM);
@@ -38,11 +39,31 @@ public class Analyser extends AnalysisVisitor {
 
 
 
+
     }
 
     private Void dealWithProgram(JmmNode node, SymbolTable table) {
         for (JmmNode child : node.getChildren()) {
             visit(child, table);
+        }
+        return null;
+    }
+
+    private Void visitArrayAccessExpr(JmmNode node, SymbolTable table) {
+
+        String method = get_Caller_method(node);
+        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table,method);
+        Type t1 = TypeUtils.getExprType(node.getJmmChild(0), table,method);
+        Type t2 = TypeUtils.getExprType(node.getJmmChild(1), table,method);
+        if (t1.getName()==null || t2.getName()==null){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Error variable not declared " + t1.getName()));
+        }
+        if (t1.isArray() && t2.getName().equals("int") && !t2.isArray()) {
+            return null;
+        }else{
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Array acess bad use " + t1.getName()));
         }
         return null;
     }

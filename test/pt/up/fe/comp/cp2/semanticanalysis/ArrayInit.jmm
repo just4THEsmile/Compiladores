@@ -2,10 +2,13 @@ import io;
 
 class A extends io{
     int length;
+    int[] i;
 
     void foo(main main) {
         io Io;
         length = 1;
+        i = new int[10];
+        length = i[i];
 
         this;
 
@@ -24,7 +27,6 @@ class A extends io{
         this;
 
         Io.Simple();
-        return Io;
         return Io;
     }
 }
