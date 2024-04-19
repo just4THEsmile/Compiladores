@@ -45,6 +45,9 @@ public class TypeUtils {
             case ARRAY_ACCESS_EXPR -> {
                 var t = getExprType(expr.getChildren().get(0), table, method_name);
                 var t2 = getExprType(expr.getChildren().get(1), table, method_name);
+                if(t.getName()==null || t2.getName()==null){
+                    yield new Type(null, false);
+                }
                 if((t.isArray() || check_for_imports_type(t,table)) && ((t2.getName().equals("int") && !t2.isArray()) || check_for_imports_type(t2,table) )){
                         if (t.getName()=="_varargs"){
                             yield new Type("int", false);
