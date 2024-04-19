@@ -92,7 +92,7 @@ public class Analyser extends AnalysisVisitor {
 
                 for (Symbol local : table.getLocalVariables(method)) {
                     if (local.getName().equals(varDecl.get("name"))) {
-                        if ( isField) {
+                        if ( isField || isLocal) {
                             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
                                     "Variable duplicated " + varDecl.get("name")));
                             return null;
@@ -102,7 +102,7 @@ public class Analyser extends AnalysisVisitor {
                 }
                 for (Symbol param : table.getParameters(method)) {
                     if (param.getName().equals(varDecl.get("name"))) {
-                        if ((isLocal ) || (isField )) {
+                        if ((isLocal ) || (isField ) || (isParam)) {
                             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
                                     "Variable duplicated " + varDecl.get("name")));
                             return null;
