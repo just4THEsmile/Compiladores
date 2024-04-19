@@ -674,10 +674,15 @@ public class Analyser extends AnalysisVisitor {
     }
 
     private Void dealWithLength(JmmNode node, SymbolTable table) {
-        JmmNode exprNode = node.getJmmChild(0);
         String method = get_Caller_method(node);
+        Type exprType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
 
-        Type exprType = TypeUtils.getExprType(exprNode, table, method);
+        if (exprType == null || exprType.getName() == null) {
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Invalid type for expression"));
+            return null;
+        }
+
         if (!exprType.isArray()) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Length can only be used on arrays"));
@@ -685,6 +690,9 @@ public class Analyser extends AnalysisVisitor {
 
         return null;
     }
+
+
+
 
 
 
