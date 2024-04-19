@@ -848,15 +848,36 @@ public class Analyser extends AnalysisVisitor {
         }
         return null;
     }
-    private Void dealWithWhile(JmmNode node, SymbolTable table){
+    private Void dealWithWhile(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
-        Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
-        if (!objectType.getName().equals("boolean")) {
-            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "While condition must be a boolean expression"));
+
+        if (node.getKind().equals(Kind.WHILE_STMT.getNodeName()) || node.getKind().equals(Kind.IF_STMT.getNodeName())) {
+            JmmNode condNode = node.getChildren().get(0);
+            Type condType = TypeUtils.getExprType(condNode, table, method);
+            if (condType != null && !condType.getName().equals("boolean")) {
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(condNode), NodeUtils.getColumn(condNode),
+                        "Condition inside " + node.getKind() + " statement must be boolean."));
+            }
         }
+
+        if (node.getKind().equals(Kind.WHILE_STMT.getNodeName())) {
+            JmmNode whileBody = node.getJmmChild(1);
+            for (JmmNode statement : whileBody.getChildren()) {
+                if (statement.getKind().equals(Kind.ARRAY_ACCESS_EXPR.getNodeName())) {
+                    JmmNode indexExpr = statement.getJmmChild(1);
+                    String methodI = get_Caller_method(statement);
+                    Type indexType = TypeUtils.getExprType(indexExpr, table, methodI);
+                    if (!indexType.getName().equals("int")) {
+                        addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(indexExpr), NodeUtils.getColumn(indexExpr),
+                                "Array index must be an integer"));
+                    }
+                }
+            }
+        }
+
         return null;
     }
+
 
     private Void dealWithLength(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
@@ -874,15 +895,6 @@ public class Analyser extends AnalysisVisitor {
 
         return null;
     }
-
-
-
-
-
-
-
-
-
 
 
 }
