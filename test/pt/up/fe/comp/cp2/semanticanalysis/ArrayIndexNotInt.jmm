@@ -1,16 +1,14 @@
-class ArrayIndexNotInt {
+class main {
+    int main;
 
-    public static void main(String[] args) {
+    main foo() {
+        main main;
+        main = new main();
 
+        return main;
     }
 
-    public int foo() {
-        int[] a;
-        boolean b;
+    public static void main(String[] main) {
 
-        a = new int[2];
-        b = true;
-
-        return a[b];
     }
 }

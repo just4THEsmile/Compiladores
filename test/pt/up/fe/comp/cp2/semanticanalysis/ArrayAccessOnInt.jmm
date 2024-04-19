@@ -1,13 +1,14 @@
-class ArrayAccessOnInt {
+class main {
+    int main;
 
-    public static void main(String[] args) {
+    main foo() {
+        main main;
+        main = new main();
 
+        return main;
     }
 
-    public int foo() {
-        int a;
-        a = 0;
+    public static void main(String[] main) {
 
-        return a[10];
     }
 }

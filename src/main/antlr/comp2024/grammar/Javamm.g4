@@ -62,7 +62,7 @@ importDecl
     ;
 
 classDecl
-    : CLASS name=ID ('extends' parent=ID)?
+    : CLASS name=( ID | 'main') ('extends' parent=ID)?
         LCURLY
         varDecl*
         (mainMethodDecl | methodDecl)*
@@ -82,7 +82,7 @@ type
     | name= INT
     | name= STRING
     | name= BOOLEAN
-    | name= ID
+    | name= (ID | 'main')
     ;
 
 typeArray
@@ -94,12 +94,11 @@ typeArray
 
 mainMethodDecl locals[boolean isPublic=false, boolean isStatic=true]
     : (PUBLIC {$isPublic=true;})?
-     STATIC VOID name='main' LPAREN ('String' '['']' arg=ID) RPAREN LCURLY  varDecl* stmt* RCURLY
+     STATIC VOID name='main' LPAREN ('String' '['']' arg=(ID|'main'|'length')) RPAREN LCURLY  varDecl* stmt* RCURLY
     ;
 
 methodDecl locals[boolean isPublic=false , boolean isStatic=false]
     : (PUBLIC {$isPublic=true;})?
-    (STATIC{$isStatic=true;})?
     (type|VOID) name=ID
     LPAREN paramlist? RPAREN
     LCURLY varDecl* stmt* RCURLY
@@ -111,7 +110,7 @@ paramlist
     ;
 
 param
-    : type name=ID
+    : type name=(ID | 'main' | 'length')
     ;
 
 stmt
@@ -131,14 +130,14 @@ expr
     | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (AND|SMALLER) expr #BinaryExpr //
     | value=INTEGER #IntegerLiteral //
-    | name=ID #VarRefExpr //
+    | name=(ID | 'main' |'length') #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
     | expr '.' 'length' #LengthExpr //
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //
     | NEW INT '['expr']' #NewIntArray //
-    | NEW classname=ID '('(expr (COMMA expr)*)?')' #NewObject //
+    | NEW classname=(ID | 'main') '('(expr (COMMA expr)*)?')' #NewObject //
 
     | '[' (expr (COMMA expr)*)? ']' #Array //
     | 'this' #ThisRefExpr //
