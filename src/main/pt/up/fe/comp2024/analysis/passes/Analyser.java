@@ -33,6 +33,8 @@ public class Analyser extends AnalysisVisitor {
         addVisit(Kind.WHILE_STMT, this::dealWithWhile);
         addVisit(Kind.LENGTH_EXPR, this::dealWithLength);
         addVisit(Kind.THIS_REF_EXPR, this::dealWithThis);
+        addVisit(Kind.PARAM, this::dealWithParam);
+        addVisit("ImportDecl", this::dealWithImport);
 
 
 
@@ -40,26 +42,86 @@ public class Analyser extends AnalysisVisitor {
 
     private Void dealWithProgram(JmmNode node, SymbolTable table) {
         for (JmmNode child : node.getChildren()) {
-            if (child.getKind().equals("Import")) {
-                continue;
-            }
             visit(child, table);
         }
         return null;
     }
 
-    private Void visitVarDecl(JmmNode varDecl, SymbolTable table) {
-        String typeName = varDecl.get("name");
+    private Void dealWithImport(JmmNode node, SymbolTable table) {
+        int s= node.get("value").lastIndexOf(",");
 
-        if (typeName.equals(TypeUtils.getIntTypeName())) {
-            String message = "Cannot assign an integer value to a boolean variable";
-            int line = varDecl.get("lineStart") != null ? Integer.parseInt(varDecl.get("lineStart")) : -1;
-            int column = varDecl.get("colStart") != null ? Integer.parseInt(varDecl.get("colStart")) : -1;
-            addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
+        String importName = node.get("value").substring(s+1).replace("[","").replace("]","").replace(" ","");
+        boolean isImport=false;
+        for (String import_ : table.getImports()) {
+            if (import_.equals(importName)) {
+                if(isImport){
+                    addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                            "Import duplicated " + importName));
+                    return null;
+                }
+                isImport=true;
+            }
         }
+        if( importName.equals(table.getClassName())){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Import name has the same name of class" + importName));
+            return null;
+        }
+        return null;
+    }
+
+    private Void visitVarDecl(JmmNode varDecl, SymbolTable table) {
+        String method = get_Caller_method(varDecl);
+        boolean isField=false;
+
+        boolean isLocal=false;
+        if(method==null){ // is field or
+            // check form reapeated fields
+            for (Symbol field : table.getFields()) {
+                if (field.getName().equals(varDecl.get("name"))) {
+                    if(isField){
+                        addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
+                                "Field duplicated " + varDecl.get("name")));
+                        return null;
+                    }
+                    isField=true;
+                }
+            }
+        }
+        if(isField){
+            return null;
+        }
+        for (Symbol local : table.getLocalVariables(method) ){
+            if (local.getName().equals(varDecl.get("name"))){
+                if(isLocal){
+                    addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
+                            "Variable duplicated " + varDecl.get("name")));
+                    return null;
+                }
+                isLocal=true;
+            }
+        }
+
 
         return null;
     }
+
+    private Void dealWithParam(JmmNode node, SymbolTable table) {
+        String method = get_Caller_method(node);
+        boolean isParam=false;
+        for (Symbol local : table.getParameters(method) ){
+            if (local.getName().equals(node.get("name"))){
+                if(isParam){
+                    addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                            "Variable duplicated " + node.get("name")));
+                    return null;
+                }
+                isParam=true;
+            }
+        }
+        return null;
+    }
+
 
     private Void dealWithThis(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
@@ -547,6 +609,9 @@ public class Analyser extends AnalysisVisitor {
     }
     private String get_Caller_method(JmmNode node){
         while (!(node.getKind()).equals("MethodDecl") && !(node.getKind()).equals("MainMethodDecl")){
+            if(node.getParent()==null){
+                return null;
+            }
             node=node.getParent();
         }
         return node.get("name");

@@ -1,15 +1,18 @@
 import io;
-class main extends io{
+import java.util.ok;
+class ok extends io{
     main length;
 
     main foo(main main) {
+        io Io;
         main length;
-        length = new main();
-        length = new main();
+
         this;
         main;
         return length;
         this.Simple();
+        main.Simple();
+        Io.Simple();
     }
 
     public static void main(String[] length){
