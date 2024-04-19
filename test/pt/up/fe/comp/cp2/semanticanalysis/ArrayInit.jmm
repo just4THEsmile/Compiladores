@@ -2,10 +2,9 @@ import io;
 import java.util.ok;
 class okkk extends io{
     main length;
-    main main;
-    main foo(main main) {
+    main foo(main a) {
         io Io;
-        main length;
+        main main;
         main main;
 
         this;
@@ -16,7 +15,7 @@ class okkk extends io{
         Io.Simple();
     }
 
-    public static void main(String[] length){
+    public static void main(String[] a){
 
 
     }

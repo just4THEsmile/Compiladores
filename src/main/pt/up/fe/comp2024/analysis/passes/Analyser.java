@@ -115,7 +115,7 @@ public class Analyser extends AnalysisVisitor {
         }
         for (Symbol local : table.getLocalVariables(method) ){
             if (local.getName().equals(varDecl.get("name"))){
-                if(isLocal && isField){
+                if(isLocal){
                     addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(varDecl), NodeUtils.getColumn(varDecl),
                             "Variable duplicated " + varDecl.get("name")));
                     return null;
