@@ -1,5 +1,5 @@
 import io;
-class main {
+class main extends io{
     main length;
 
     main foo(main main) {
@@ -9,10 +9,11 @@ class main {
         this;
         main;
         return length;
+        this.Simple();
     }
 
-    public static void main(String[] length) {
-    length;
+    public static void main(String[] length){
+
 
     }
 }

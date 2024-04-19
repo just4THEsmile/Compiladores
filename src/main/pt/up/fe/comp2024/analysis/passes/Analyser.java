@@ -610,8 +610,10 @@ public class Analyser extends AnalysisVisitor {
             }
 
         }else{
-            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                    "Method not declared " + method_called));
+            if (table.getSuper() == null) {
+                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                        "Method not declared " + method_called));
+            }
         }
 
         return null;
