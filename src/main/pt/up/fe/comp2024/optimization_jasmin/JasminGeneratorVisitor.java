@@ -179,7 +179,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append(instCode);
     }
-    code.append("return").append(NL);
+    code.append(TAB).append("return").append(NL);
 
     code.append(".end method\n");
 
@@ -275,7 +275,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(instCode);
         }
         if (table.getReturnType(currentMethod).getName().equals("void")){
-            code.append("return").append(NL);
+            code.append(TAB).append("return").append(NL);
         }
 
         code.append(".end method\n");

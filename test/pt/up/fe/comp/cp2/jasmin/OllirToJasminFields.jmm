@@ -1,4 +1,8 @@
-class Test {
+import foo.bar.A;
+import pt.up.fe.comp.comp.Comp;
+import io;
+
+    class Test {
 
 	int intField;
 
@@ -8,9 +12,12 @@ class Test {
 	
 	public int foo() {
         int a;
+        int comp;
+        a = A.fooInt();
+        comp = Comp.fooInt();
+        a = io.fooInt();
 
-		intField = 10;
-		a = intField;
+
 
 		return a;
 	}

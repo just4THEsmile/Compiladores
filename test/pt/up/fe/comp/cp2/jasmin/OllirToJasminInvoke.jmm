@@ -1,24 +1,12 @@
-import foo.bar.A;
+import io;
 
-class Test {
-    Test t;
-    A b;
 
-	public static void main(String[] a) {
-    	Test test;
-	    test = new Test();
-	}
+class Test extends io{
+    int intField;
+    Object test;
 
-	public void Test() {
-        A a;
-        a = test1();
+    public static void main(String[] args) {
     }
-
-	public void test1() {
-	    A a;
-        a = new A();
-
-	}
 
 
 

@@ -1,5 +1,7 @@
 import io;
 import Quicksort;
+import GetterAndSetter;
+
 
 class SymbolTable extends Quicksort {
 
@@ -16,8 +18,10 @@ class SymbolTable extends Quicksort {
 		return 0;
 	}
 
-	public boolean method2(int intParam1, boolean boolParam1) {
-		return boolParam1;
+	public int method2(GetterAndSetter c) {
+	    int intParam1;
+	    intParam1 = c.get();
+		return intParam1;
 	}
 
 	public static void main(String[] args) {

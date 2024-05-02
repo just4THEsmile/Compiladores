@@ -151,9 +151,12 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append("invokestatic " + className + "/" + methodName + "()");
                 if (className.equals(table.getClassName())) {
                     code.append(getTypeReturnToStr(table.getReturnType(methodName)));
+                }else if(has_ancertor_assign(memberCallExpr)!=null){
+                    code.append(getTypeToStr(has_ancertor_assign(memberCallExpr)));
                 }else {
                     code.append("V");
                 }
+                code.append(NL);
                 return null;
             }
             var children = memberCallExpr.getChildren();
@@ -165,8 +168,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             code.append(")");
             if (className.equals(table.getClassName())) {
                 code.append(getTypeReturnToStr(table.getReturnType(methodName)));
-            }else {
-                code.append("V");
+            }else if(has_ancertor_assign(memberCallExpr)!=null){
+                code.append(getTypeToStr(has_ancertor_assign(memberCallExpr)));
+            } else {
+                code.append("V").append(NL);
             }
             code.append(NL);
             return null;
@@ -176,8 +181,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 if (className.equals(table.getClassName())) {
                     var test= table.getReturnType(methodName);
                     code.append(getTypeReturnToStr(table.getReturnType(methodName)));
+                }else if(has_ancertor_assign(memberCallExpr)!=null){
+                    code.append(getTypeToStr(has_ancertor_assign(memberCallExpr)));
                 }else {
-                    code.append("V");
+                    code.append("V").append(NL);
                 }
                 code.append(NL);
                 return null;
@@ -191,6 +198,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             code.append(")");
             if (className.equals(table.getClassName())) {
                 code.append(getTypeReturnToStr(table.getReturnType(methodName)));
+            }else if(has_ancertor_assign(memberCallExpr)!=null){
+                code.append(getTypeToStr(has_ancertor_assign(memberCallExpr)));
             }else {
                 code.append("V");
             }
@@ -278,6 +287,18 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         return class_name;
     }
 
+
+    private Type has_ancertor_assign(JmmNode node){
+        var parent = node.getParent();
+        while (parent!=null){
+            if (parent.getKind().equals("AssignStmt")){
+                return TypeUtils.getVarExprType(parent.getJmmChild(0), table, CurrentMethod);
+            }
+            parent = parent.getParent();
+        }
+        return null;
+
+    }
 
 
 }
