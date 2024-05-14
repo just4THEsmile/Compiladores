@@ -506,7 +506,7 @@ public class Analyser extends AnalysisVisitor {
 
     private Void Check_Assign_STM(JmmNode assign_stm, SymbolTable table) {
         String MethodName = get_Caller_method(assign_stm);
-        if(!assign_stm.getJmmChild(0).getKind().equals("VarRefExpr")){
+        if(!(assign_stm.getJmmChild(0).getKind().equals("VarRefExpr") || assign_stm.getJmmChild(0).getKind().equals("ArrayAccessExpr") )){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
                     "Error on assignment " + assign_stm.getJmmChild(0).getKind()));
         }
@@ -593,6 +593,16 @@ public class Analyser extends AnalysisVisitor {
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getVarExprType(node, table, method);
 
+        for (Symbol param : table.getParameters(method)) {
+            if (param.getName().equals(node.get("name"))) {
+                return null;
+            }
+        }
+        for (Symbol local : table.getLocalVariables(method)) {
+            if (local.getName().equals(node.get("name"))) {
+                return null;
+            }
+        }
         //check if var is field
         for (Symbol field : table.getFields()) {
             if (field.getName().equals(node.get("name"))) {

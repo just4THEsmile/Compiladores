@@ -181,22 +181,10 @@ public class TypeUtils {
 
         var imports= table.getImports();
         String name=varRefExpr.get("name");
+
         for(String i : imports){
             if(i.endsWith(name)){
                 return new Type(name, false);
-            }
-        }
-
-        for (var symbol : table.getFields()) {
-            if (symbol.getName().equals(varRefExpr.get("name"))) {
-                return symbol.getType();
-            }
-        }
-        for(var method : table.getMethods()){
-            for(var param : table.getParameters(method)){
-                if(param.getName().equals(varRefExpr.get("name")) && (method.equals(method_name) || method_name==null)){
-                    return param.getType();
-                }
             }
         }
         for (var method : table.getMethods()) {
@@ -206,6 +194,18 @@ public class TypeUtils {
                 }
             }
 
+        }
+        for(var method : table.getMethods()){
+            for(var param : table.getParameters(method)){
+                if(param.getName().equals(varRefExpr.get("name")) && (method.equals(method_name) || method_name==null)){
+                    return param.getType();
+                }
+            }
+        }
+        for (var symbol : table.getFields()) {
+            if (symbol.getName().equals(varRefExpr.get("name"))) {
+                return symbol.getType();
+            }
         }
         return new Type(null, false);
     }

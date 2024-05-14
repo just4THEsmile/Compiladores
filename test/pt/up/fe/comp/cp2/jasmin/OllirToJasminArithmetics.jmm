@@ -5,7 +5,7 @@ class Test {
 
 	}
 
-	
+
 	public int foo() {
 	    int a;
 	    int b;

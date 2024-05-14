@@ -2,6 +2,7 @@ package pt.up.fe.comp2024.optimization_jasmin;
 
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.ast.AJmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PostorderJmmVisitor;
 import pt.up.fe.comp2024.ast.TypeUtils;
@@ -14,7 +15,7 @@ import java.util.Objects;
 public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilder, Void> {
 
     private static final String NL = "\n";
-
+    private static int  label_number = 0;
     private final Map<String, Integer> currentRegisters;
     private final SymbolTable table;
     private final String CurrentMethod;
@@ -40,6 +41,22 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         addVisit("NotExpr", this::visitNotExpr);
         addVisit("ParenExpr", this::visitParenExpr);
         addVisit("LengthExpr", this::visitLengthExpr);
+        addVisit("NewIntArray", this::visitNewArray);
+        addVisit("ArrayAccessExpr", this::visitArrayAccessExpr);
+
+    }
+
+    private Void visitArrayAccessExpr(JmmNode arrayAccessExpr, StringBuilder code) {
+
+            code.append("iaload" + NL);
+            return null;
+    }
+
+    private Void visitNewArray(JmmNode newArray, StringBuilder code){
+
+        String type = newArray.get("name");
+        code.append("newarray ").append(type).append(NL);
+        return null;
 
     }
 
@@ -48,7 +65,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         return null;
     }
     private Void visitLengthExpr(JmmNode lengthExpr, StringBuilder code) {
-        this.visit(lengthExpr.getJmmChild(0), code);
         code.append("arraylength" + NL);
         return null;
     }
@@ -89,6 +105,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
         SpecsCheck.checkNotNull(reg, () -> "No register mapped for variable '" + name + "'");
 
+        if (t.isArray()){
+            code.append("aload ");
+            code.append(currentRegisters.get(name) + NL);
+            return null;
+        }
         switch (t.getName()) {
             case "int","boolean" :
                 code.append("iload ");
@@ -116,6 +137,21 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             case "-" -> "isub";
             case "/" -> "idiv";
             case "&&"-> "iand";
+            case "<" -> {
+                StringBuilder string=new StringBuilder();
+                int local_label=label_number;
+                label_number++;
+                string.append("isub" + NL);
+                string.append("iflt " + "cmp_label_true_" + local_label + NL);
+                string.append("iconst_0" + NL);
+                string.append("goto " + "cmp_label_end_" + local_label + NL);
+                string.append("cmp_label_true_" + local_label + ":" + NL);
+                string.append("iconst_1" + NL);
+                string.append("cmp_label_end_" + local_label + ":" + NL);
+
+
+                yield  string;
+            }
             default -> throw new NotImplementedException(binaryExpr.get("op"));
         };
 
@@ -125,7 +161,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         return null;
     }
     private Void visitNotExpr(JmmNode notExpr, StringBuilder code) {
-        code.append("ldc 1" + NL);
+        code.append("iconst_1" + NL);
         code.append("ixor" + NL);
         return null;
     }

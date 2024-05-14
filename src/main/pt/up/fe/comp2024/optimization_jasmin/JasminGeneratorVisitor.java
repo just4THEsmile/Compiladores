@@ -26,6 +26,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     private JasminExprGeneratorVisitor exprGenerator;
 
     private String currentMethod;
+    private static int label_number=0;
     private int nextRegister;
 
     private Map<String, Integer> currentRegisters;
@@ -52,6 +53,8 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit("ReturnStmt", this::visitReturnStmt);
         addVisit("BlockStmt", this::visitBlockStmt);
         addVisit("ExprStmt", this::visitExprStmt);
+        addVisit("IfStmt", this::visitIfStmt);
+        addVisit("WhileStmt", this::visitWhileStmt);
 
     }
 
@@ -63,6 +66,48 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         var classDecl = program.getChildren("ClassDecl").get(0);
 
         return visit(classDecl);
+    }
+    private String visitIfStmt(JmmNode ifStmt, Void unused) {
+        var code = new StringBuilder();
+        int local_label=label_number;
+        label_number++;
+        // expr code
+        exprGenerator.visit(ifStmt.getJmmChild(0), code);
+
+        code.append("ifeq " + "if_"+local_label+ "_else" + NL);
+
+        // if code
+        var instCode = StringLines.getLines(visit(ifStmt.getJmmChild(1))).stream()
+                .collect(Collectors.joining(NL + TAB, TAB, NL));
+        code.append(instCode);
+
+        code.append("goto " + "if_" +local_label+ "_end" + NL);
+
+        code.append("if_" +local_label + "_else:" + NL);
+
+        // else code
+        instCode = StringLines.getLines(visit(ifStmt.getJmmChild(2))).stream()
+                .collect(Collectors.joining(NL + TAB, TAB, NL));
+        code.append(instCode);
+
+        code.append("if_" +local_label + "_end:" + NL);
+        return code.toString();
+    }
+    private String visitWhileStmt(JmmNode whileStmt,Void unused) {
+        var code = new StringBuilder();
+        int local_label=label_number;
+        label_number++;
+        code.append("while_"+local_label+ ":" + NL);
+
+        exprGenerator.visit(whileStmt.getJmmChild(0), code);
+        code.append("ifeq " + "while_" + local_label+ "_end" + NL);
+        var instCode = StringLines.getLines(visit(whileStmt.getJmmChild(1))).stream()
+                .collect(Collectors.joining(NL + TAB, TAB, NL));
+
+        code.append(instCode);
+        code.append("goto " + "while_"+local_label + NL);
+        code.append("while_"+local_label + "_end:" + NL);
+        return code.toString();
     }
 
     private String visitClassDecl(JmmNode classDecl, Void unused) {
@@ -297,8 +342,26 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // store value in top of the stack in destination
         var lhs = assignStmt.getChild(0);
-        SpecsCheck.checkArgument(lhs.isInstance("VarRefExpr"), () -> "Expected a node of type 'VarRefExpr', but instead got '" + lhs.getKind() + "'");
+        SpecsCheck.checkArgument(lhs.isInstance("VarRefExpr") || lhs.isInstance("ArrayAccessExpr"), () -> "Expected a node of type 'VarRefExpr', but instead got '" + lhs.getKind() + "'");
 
+        if(lhs.isInstance("ArrayAccessExpr")){
+            var destName = lhs.getJmmChild(0).get("name");
+            // get register
+            var reg = currentRegisters.get(destName);
+
+            // If no mapping, variable has not been assigned yet, create mapping
+            if (reg == null) {
+                reg = nextRegister;
+                currentRegisters.put(destName, reg);
+                nextRegister++;
+            }
+            exprGenerator.visit(lhs.getJmmChild(0), code);
+            exprGenerator.visit(lhs.getJmmChild(1), code);
+            exprGenerator.visit(assignStmt.getChild(1), code);
+
+            code.append("iastore").append(NL);
+            return code.toString();
+        }
         var destName = lhs.get("name");
 
         // get register
@@ -322,6 +385,10 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         exprGenerator.visit(assignStmt.getChild(1), code);
         Type t = TypeUtils.getVarExprType(assignStmt.getJmmChild(0),table,currentMethod);
+        if (t.isArray()){
+            code.append("astore ").append(reg).append(NL);
+            return code.toString();
+        }
         if (t.getName().equals("int") || t.getName().equals("boolean")) {
             code.append("istore ").append(reg).append(NL);
         }else{
