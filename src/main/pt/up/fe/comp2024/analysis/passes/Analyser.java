@@ -535,7 +535,7 @@ public class Analyser extends AnalysisVisitor {
         }
         var test=TypeUtils.check_for_imports_type(exp1,table);
         var test1 =TypeUtils.check_for_imports_derivs(exp2,table);
-        if (!exp1.equals(exp2) && !(TypeUtils.check_for_imports_type(exp1,table)) && !TypeUtils.check_for_imports_derivs(exp2,table)){
+        if (!(exp1.equals(exp2) || exp1.getName()=="empty" || exp2.getName()=="empty") && !(TypeUtils.check_for_imports_type(exp1,table)) && !TypeUtils.check_for_imports_derivs(exp2,table)){
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(assign_stm), NodeUtils.getColumn(assign_stm),
                     "Types differ " + exp1.getName() + " and " + exp2.getName()));
         }
@@ -791,7 +791,7 @@ public class Analyser extends AnalysisVisitor {
     private Void dealWithMemberCallExpr(JmmNode node, SymbolTable table){
         String method = get_Caller_method(node);
         Type objectType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
-        if(TypeUtils.check_for_imports_type(objectType,table)){
+        if(TypeUtils.check_for_imports_type(objectType,table) ){
             return null;
         }
         if (objectType.getName() == null) {

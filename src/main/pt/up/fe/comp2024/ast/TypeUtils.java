@@ -182,6 +182,10 @@ public class TypeUtils {
         var imports= table.getImports();
         String name=varRefExpr.get("name");
 
+        if (name.equals(table.getClassName())) {
+            return new Type(name, false);
+        }
+
         for(String i : imports){
             if(i.endsWith(name)){
                 return new Type(name, false);

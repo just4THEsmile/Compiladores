@@ -2,24 +2,21 @@ import foo.bar.A;
 import pt.up.fe.comp.comp.Comp;
 import io;
 
-    class Test {
+    class Test extends A{
 
 	int intField;
 
 	public static void main(String[] args) {
 	}
 
-	
+
 	public int foo() {
         int a;
         int comp;
-        A.fooInt();
-        a = A.fooInt();
-        comp = Comp.fooInt();
-        a = io.fooInt();
+        Test.foo();
 
 
 
-		return a;
+		return 1;
 	}
 }

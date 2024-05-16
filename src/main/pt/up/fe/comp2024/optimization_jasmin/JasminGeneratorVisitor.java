@@ -29,7 +29,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     private static int label_number=0;
     private int nextRegister;
 
-    private Map<String, Integer> currentRegisters;
+    private static Map<String, Integer> currentRegisters;
 
     public JasminGeneratorVisitor(SymbolTable table) {
         this.table = table;
@@ -347,14 +347,8 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         if(lhs.isInstance("ArrayAccessExpr")){
             var destName = lhs.getJmmChild(0).get("name");
             // get register
-            var reg = currentRegisters.get(destName);
 
-            // If no mapping, variable has not been assigned yet, create mapping
-            if (reg == null) {
-                reg = nextRegister;
-                currentRegisters.put(destName, reg);
-                nextRegister++;
-            }
+
             exprGenerator.visit(lhs.getJmmChild(0), code);
             exprGenerator.visit(lhs.getJmmChild(1), code);
             exprGenerator.visit(assignStmt.getChild(1), code);
@@ -368,18 +362,16 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         var reg = currentRegisters.get(destName);
 
         // If no mapping, variable has not been assigned yet, create mapping
+
         if (reg == null) {
-            reg = nextRegister;
-            currentRegisters.put(destName, reg);
-            nextRegister++;
-        }
-        var fieldType = table.getFields();
-        for (Symbol field : fieldType){
-            if(field.getName().equals(destName)){
-                code.append("aload 0").append(NL);
-                exprGenerator.visit(assignStmt.getChild(1), code);
-                code.append("putfield ").append(table.getClassName()).append("/").append(destName).append(" ").append(getTypeToStr(field.getType())).append(NL);
-                return code.toString();
+            var fieldType = table.getFields();
+            for (Symbol field : fieldType) {
+                if (field.getName().equals(destName)) {
+                    code.append("aload 0").append(NL);
+                    exprGenerator.visit(assignStmt.getChild(1), code);
+                    code.append("putfield ").append(table.getClassName()).append("/").append(destName).append(" ").append(getTypeToStr(field.getType())).append(NL);
+                    return code.toString();
+                }
             }
         }
 

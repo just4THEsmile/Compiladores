@@ -2,8 +2,7 @@ import io;
 
 
 class Test extends io{
-    int intField;
-    Object test;
+
 
     public static void main(String[] args) {
     }

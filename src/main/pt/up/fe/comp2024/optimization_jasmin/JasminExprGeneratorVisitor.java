@@ -16,9 +16,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     private static final String NL = "\n";
     private static int  label_number = 0;
+    private static int array_access_val = 0;
     private final Map<String, Integer> currentRegisters;
     private final SymbolTable table;
     private final String CurrentMethod;
+
 
     public JasminExprGeneratorVisitor(Map<String, Integer> currentRegisters,SymbolTable table, String CurrentMethod) {
         this.currentRegisters = currentRegisters;
@@ -43,7 +45,27 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         addVisit("LengthExpr", this::visitLengthExpr);
         addVisit("NewIntArray", this::visitNewArray);
         addVisit("ArrayAccessExpr", this::visitArrayAccessExpr);
+        addVisit("Array", this::visitArray);
 
+    }
+    private Void visitArray(JmmNode array, StringBuilder code) {
+        int num_of_reg=currentRegisters.size()+1;
+        code.append("ldc " + array.getChildren().size() + NL); // size of array
+        code.append("newarray int" + NL);
+        code.append("astore " + num_of_reg + NL);
+
+        for (int i = array.getChildren().size()-1; i>=0; i--) {
+
+            // remove the top value to put the index then add it again
+            code.append("istore "+(num_of_reg+1)).append(NL);
+            code.append("aload "+num_of_reg).append(NL);
+            code.append("ldc "+i).append(NL);
+            code.append("iload "+(num_of_reg+1)).append(NL);
+            code.append("iastore" + NL).append(NL);
+        }
+        code.append("aload "+num_of_reg).append(NL);
+        array_access_val = 0;
+        return null;
     }
 
     private Void visitArrayAccessExpr(JmmNode arrayAccessExpr, StringBuilder code) {
@@ -94,11 +116,17 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         if ((TypeUtils.check_for_imports_type(new Type(name,false), table))) {
             return null;
         }
-        for (var field : fields) {
-            if (field.getName().equals(name)) {
-                code.append("aload 0" + NL);
-                code.append("getfield " + table.getClassName() + "/" + name+" " + getTypeToStr(field.getType()) + NL);
-                return null;
+        if(name.equals(table.getClassName())){
+            code.append("aload 0" + NL);
+            return null;
+        }
+        if(reg==null){
+            for (var field : fields) {
+                if (field.getName().equals(name)) {
+                    code.append("aload 0" + NL);
+                    code.append("getfield " + table.getClassName() + "/" + name+" " + getTypeToStr(field.getType()) + NL);
+                    return null;
+                }
             }
         }
 
@@ -173,7 +201,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         code.append("dup" + NL);
         code.append("invokespecial " + className + "/<init>()V" + NL);
 
-        // TODO : WHATCHOUT FOR POP idfk
+        // TODO : WHATCHOUT FOR POP
         if(has_parent_stmt_pop_check(newObject)){
             code.append("pop" + NL);
         }
@@ -278,7 +306,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         return null;
     }
 
-    private String getTypeToStr(pt.up.fe.comp.jmm.analysis.table.Type type){
+    private String getTypeToStr(Type type){
         StringBuilder string=new StringBuilder();
         if(type.isArray()){
             string.append("[");
@@ -306,7 +334,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         }
         return string.toString();
     }
-    private String getTypeReturnToStr(pt.up.fe.comp.jmm.analysis.table.Type type){
+    private String getTypeReturnToStr(Type type){
         StringBuilder string=new StringBuilder();
         if (type.getName()==null){
             string.append("V");
