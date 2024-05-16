@@ -13,6 +13,7 @@ import io;
 	public int foo() {
         int a;
         int comp;
+        A.fooInt();
         a = A.fooInt();
         comp = Comp.fooInt();
         a = io.fooInt();

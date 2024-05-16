@@ -167,13 +167,16 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
     private Void visitNewObject(JmmNode newObject, StringBuilder code) {
         var className = get_parsed_class(newObject.get("classname"));
-        for (var child : newObject.getChildren()) {
-            this.visit(child, code);
-        }
+
 
         code.append("new " + className + NL);
         code.append("dup" + NL);
         code.append("invokespecial " + className + "/<init>()V" + NL);
+
+        // TODO : WHATCHOUT FOR POP idfk
+        if(has_parent_stmt_pop_check(newObject)){
+            code.append("pop" + NL);
+        }
 
         //code.append("invokespecial " + className + "/<init>()V" + NL);
         return null;
@@ -193,6 +196,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                     code.append("V");
                 }
                 code.append(NL);
+
+
                 return null;
             }
             var children = memberCallExpr.getChildren();
@@ -223,6 +228,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                     code.append("V").append(NL);
                 }
                 code.append(NL);
+
                 return null;
             }
             var children = memberCallExpr.getChildren();
@@ -240,6 +246,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append("V");
             }
             code.append(NL);
+
+
 
             return null;
         }
@@ -334,6 +342,15 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         }
         return null;
 
+    }
+
+    private Boolean has_parent_stmt_pop_check(JmmNode node){
+        var parent = node.getParent();
+            if (parent.getKind().equals("IfStmt") || parent.getKind().equals("WhileStmt") || parent.getKind().equals("BlockStm") || parent.getKind().equals("ExprStmt") ){
+                return true;
+            }else{
+                return false;
+            }
     }
 
 
