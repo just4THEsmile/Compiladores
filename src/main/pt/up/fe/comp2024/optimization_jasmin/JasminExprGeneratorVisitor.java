@@ -229,6 +229,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append(NL);
 
 
+
+
                 return null;
             }
             var children = memberCallExpr.getChildren();
@@ -272,6 +274,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append(")");
                 code.append(getTypeReturnToStr(table.getReturnType(methodName)));
                 code.append(NL);
+
+                if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                    code.append("pop" + NL);
+                }
                 return null;
             }
 
@@ -291,6 +297,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             }
             code.append(NL);
 
+            if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                code.append("pop" + NL);
+            }
+
 
 
             return null;
@@ -309,6 +319,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             code.append("invokevirtual " + className + "/" + methodName + "()");
             code.append(getTypeReturnToStr(table.getReturnType(methodName)));
             code.append(NL);
+
+            if(has_parent_stmt_pop_check( methodCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                code.append("pop" + NL);
+            }
             return null;
         }
         int num_of_reg = max_reg_val;
@@ -332,6 +346,9 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         code.append(")");
         code.append(getTypeReturnToStr(table.getReturnType(methodName)));
         code.append(NL);
+        if(has_parent_stmt_pop_check( methodCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+            code.append("pop" + NL);
+        }
 
         return null;
     }
@@ -408,7 +425,15 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     private Boolean has_parent_stmt_pop_check(JmmNode node){
         var parent = node.getParent();
-            if (parent.getKind().equals("IfStmt") || parent.getKind().equals("WhileStmt") || parent.getKind().equals("BlockStm") || parent.getKind().equals("ExprStmt") ){
+        while (parent!=null && parent.getKind().equals("ParenExpr")){
+            parent = parent.getParent();
+        }
+            if ( parent.getKind().equals("BlockStm") || parent.getKind().equals("ExprStmt")){
+                return true;
+            }else if ( parent.getKind().equals("IfStmt") || parent.getKind().equals("WhileStmt") ){
+                if(parent.getJmmChild(0).equals(node)){
+                    return false;
+                }
                 return true;
             }else{
                 return false;

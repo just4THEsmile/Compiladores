@@ -13,11 +13,7 @@ class A extends io{
         length = i[length];
 
 
-        while (b[1]) {
-        }
-        if(i[1]) {
-        } else {
-        }
+
 
         Io.Simple();
         return i[length];
