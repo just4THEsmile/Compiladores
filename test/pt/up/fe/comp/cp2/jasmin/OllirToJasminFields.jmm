@@ -2,21 +2,22 @@ import foo.bar.A;
 import pt.up.fe.comp.comp.Comp;
 import io;
 
-    class Test extends A{
+    class TestInvokeVirtual extends A{
 
 	int intField;
 
-	public static void main(String[] args) {
-	}
+    public int add(int a, int b) {
+        A aa;
+        aa= new A();
+        aa.ffo();
+        A.ffee();
+        this.ffo();
+        return (a + b);
+    }
+
+    public static void main(String[] args) {
+        int result;
 
 
-	public int foo() {
-        int a;
-        int comp;
-        Test.foo();
-
-
-
-		return 1;
-	}
+    }
 }

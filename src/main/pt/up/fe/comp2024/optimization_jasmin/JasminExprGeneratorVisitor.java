@@ -1,5 +1,6 @@
 package pt.up.fe.comp2024.optimization_jasmin;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmNode;
@@ -16,8 +17,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     private static final String NL = "\n";
     private static int  label_number = 0;
-    private static int array_access_val = 0;
-    private final Map<String, Integer> currentRegisters;
+    private static int max_reg_val = 0;
+    private static Map<String, Integer> currentRegisters;
     private final SymbolTable table;
     private final String CurrentMethod;
 
@@ -26,6 +27,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         this.currentRegisters = currentRegisters;
         this.table = table;
         this.CurrentMethod = CurrentMethod;
+        this.max_reg_val = currentRegisters.size();
     }
 
     @Override
@@ -49,7 +51,9 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     }
     private Void visitArray(JmmNode array, StringBuilder code) {
-        int num_of_reg=currentRegisters.size()+1;
+        int num_of_reg=max_reg_val;
+        max_reg_val++;
+        max_reg_val++;
         code.append("ldc " + array.getChildren().size() + NL); // size of array
         code.append("newarray int" + NL);
         code.append("astore " + num_of_reg + NL);
@@ -64,7 +68,6 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             code.append("iastore" + NL).append(NL);
         }
         code.append("aload "+num_of_reg).append(NL);
-        array_access_val = 0;
         return null;
     }
 
@@ -212,8 +215,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     private Void visitMemberCallExpr(JmmNode memberCallExpr, StringBuilder code) {
         var methodName = memberCallExpr.get("name");
         var className = get_parsed_class(TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod).getName());
-        Type t = TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod);
-        if ((TypeUtils.check_for_imports_type(t, table)) && memberCallExpr.getJmmChild(0).getChildren().isEmpty()) {
+        Type t = TypeUtils.getExprType_Ollir(memberCallExpr.getJmmChild(0), table, CurrentMethod);
+        if (t.getName().charAt(t.getName().length()-1)=='_' ) {
             if(memberCallExpr.getNumChildren() == 1) {
                 code.append("invokestatic " + className + "/" + methodName + "()");
                 if (className.equals(table.getClassName())) {
@@ -259,6 +262,19 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
                 return null;
             }
+
+            if (memberCallExpr.getJmmChild(0).getKind().equals("ThisRefExpr")) {
+                code.append("invokevirtual " + className + "/" + methodName + "(");
+                for(Symbol s :table.getParameters(methodName)){
+                    String param = getTypeReturnToStr(s.getType());
+                    code.append(param);
+                }
+                code.append(")");
+                code.append(getTypeReturnToStr(table.getReturnType(methodName)));
+                code.append(NL);
+                return null;
+            }
+
             var children = memberCallExpr.getChildren();
             code.append("invokevirtual " + className + "/" + methodName + "(");
             for (int i = 1; i<children.size(); i++) {
@@ -287,14 +303,28 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         var methodName = methodCallExpr.get("funcname");
         var className = table.getClassName();
         var children = methodCallExpr.getChildren();
-        code.append("aload 0" + NL);
+
         if (children.isEmpty()) {
+            code.append("aload 0" + NL);
             code.append("invokevirtual " + className + "/" + methodName + "()");
             code.append(getTypeReturnToStr(table.getReturnType(methodName)));
             code.append(NL);
             return null;
         }
+        int num_of_reg = max_reg_val;
+        max_reg_val+=children.size();
+
+        for(int i = children.size(); i>0; i--){
+            code.append("astore " + (i+num_of_reg) + NL);
+        }
+        code.append("aload 0" + NL);
+        for(int i = 0; i<children.size(); i++){
+            code.append("iload " + num_of_reg + NL);
+            num_of_reg++;
+        }
+
         code.append("invokevirtual " + className + "/" + methodName + "(");
+
         for (int i = 0; i<children.size(); i++) {
             var t = TypeUtils.getExprType(children.get(i), table, CurrentMethod);
             code.append(getTypeToStr(t));
@@ -336,6 +366,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
     private String getTypeReturnToStr(Type type){
         StringBuilder string=new StringBuilder();
+        if(type==null){
+            string.append("V");
+            return string.toString();
+        }
         if (type.getName()==null){
             string.append("V");
             return string.toString();

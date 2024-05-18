@@ -767,16 +767,6 @@ public class Analyser extends AnalysisVisitor {
                     String message = "Expected parameter of type " + expectedType.getName() + " in method " + method_called + " but found " + paramType.getName();
                     addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
                 }
-
-                JmmNode paramNode = node.getJmmChild(i);
-                String paramName = paramNode.get("paramname");
-
-                if (!paramNames.add(paramName)) {
-                    int line = NodeUtils.getLine(paramNode);
-                    int column = NodeUtils.getColumn(paramNode);
-                    String message = "Duplicate parameter name '" + paramName + "' in method call";
-                    addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
-                }
             }
 
         }else{
