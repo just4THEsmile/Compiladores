@@ -10,6 +10,7 @@ import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -24,10 +25,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
 
     public JasminExprGeneratorVisitor(Map<String, Integer> currentRegisters,SymbolTable table, String CurrentMethod) {
-        this.currentRegisters = currentRegisters;
+        JasminExprGeneratorVisitor.currentRegisters = currentRegisters;
         this.table = table;
         this.CurrentMethod = CurrentMethod;
-        this.max_reg_val = currentRegisters.size();
+        max_reg_val = currentRegisters.size();
     }
 
     @Override
@@ -217,6 +218,31 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         var className = get_parsed_class(TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod).getName());
         Type t = TypeUtils.getExprType_Ollir(memberCallExpr.getJmmChild(0), table, CurrentMethod);
         if (t.getName().charAt(t.getName().length()-1)=='_' ) {
+            String static_class= t.getName().substring(0, t.getName().length()-1);
+            if( static_class==table.getClassName()){
+                List< Symbol> params =table.getParameters(methodName);
+                for(Symbol s : params){
+                    if (s.getType().getName().equals("_varargs")){
+                        int num_of_reg = max_reg_val;
+                        max_reg_val++;
+                        max_reg_val++;
+                        int non_var_args = params.size()-1;
+                        int varg_args_num = memberCallExpr.getNumChildren()-1-non_var_args;
+                        code.append("ldc " + varg_args_num + NL);
+                        code.append("newarray int" + NL);
+                        code.append("astore " + num_of_reg + NL);
+                        for (int i=varg_args_num-1;i>=0;i--){
+                            // remove the top value to put the index then add it again
+                            code.append("istore "+(num_of_reg+1)).append(NL);
+                            code.append("aload "+num_of_reg).append(NL);
+                            code.append("ldc "+i).append(NL);
+                            code.append("iload "+(num_of_reg+1)).append(NL);
+                            code.append("iastore" + NL).append(NL);
+                        }
+                        code.append("aload "+num_of_reg).append(NL);
+                    }
+                }
+            }
             if(memberCallExpr.getNumChildren() == 1) {
                 code.append("invokestatic " + className + "/" + methodName + "()");
                 if (className.equals(table.getClassName())) {
@@ -264,8 +290,31 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
                 return null;
             }
+            Type t1 = TypeUtils.getExprType(memberCallExpr.getJmmChild(0), table, CurrentMethod);
+            if (memberCallExpr.getJmmChild(0).getKind().equals("ThisRefExpr") || t1.getName().equals(table.getClassName())) {
+                List< Symbol> params =table.getParameters(methodName);
+                for(Symbol s : params){
+                    if (s.getType().getName().equals("_varargs")){
+                        int num_of_reg = max_reg_val;
+                        max_reg_val++;
+                        max_reg_val++;
+                        int non_var_args = params.size()-1;
+                        int varg_args_num = memberCallExpr.getNumChildren()-1-non_var_args;
+                        code.append("ldc " + varg_args_num + NL);
+                        code.append("newarray int" + NL);
+                        code.append("astore " + num_of_reg + NL);
+                        for (int i=varg_args_num-1;i>=0;i--){
+                            // remove the top value to put the index then add it again
+                            code.append("istore "+(num_of_reg+1)).append(NL);
+                            code.append("aload "+num_of_reg).append(NL);
+                            code.append("ldc "+i).append(NL);
+                            code.append("iload "+(num_of_reg+1)).append(NL);
+                            code.append("iastore" + NL).append(NL);
+                        }
+                        code.append("aload "+num_of_reg).append(NL);
+                    }
+                }
 
-            if (memberCallExpr.getJmmChild(0).getKind().equals("ThisRefExpr")) {
                 code.append("invokevirtual " + className + "/" + methodName + "(");
                 for(Symbol s :table.getParameters(methodName)){
                     String param = getTypeReturnToStr(s.getType());

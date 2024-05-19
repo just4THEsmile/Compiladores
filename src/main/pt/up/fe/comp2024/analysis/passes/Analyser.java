@@ -747,15 +747,6 @@ public class Analyser extends AnalysisVisitor {
 
             }
 
-            if (methodParams.isEmpty() && !node.getChildren().isEmpty()) {
-                int line = NodeUtils.getLine(node);
-                int column = NodeUtils.getColumn(node);
-                String message = "Method " + method_called + " expects no parameters but received " + node.getChildren().size() + " parameters";
-                addReport(Report.newError(Stage.SEMANTIC, line, column, message, null));
-                return null;
-            }
-
-            Set<String> paramNames = new HashSet<>();
 
             for (int i = 0; i < methodParams.size(); i++) {
                 Type paramType = TypeUtils.getExprType(node.getJmmChild(i), table,null);
@@ -826,14 +817,6 @@ public class Analyser extends AnalysisVisitor {
             }
         }
 
-        if (node.get("name").equals("length")) {
-            Type objectType2 = TypeUtils.getExprType(node.getJmmChild(0), table, null);
-            if (!objectType2.isArray()) {
-                addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
-                        "Method 'length' can only be used on arrays"));
-            }
-            return null;
-        }
 
 
         return null;
@@ -857,20 +840,6 @@ public class Analyser extends AnalysisVisitor {
 
         }
 
-        if (node.getKind().equals(Kind.WHILE_STMT.getNodeName())) {
-            JmmNode whileBody = node.getJmmChild(1);
-            for (JmmNode statement : whileBody.getChildren()) {
-                if (statement.getKind().equals(Kind.ARRAY_ACCESS_EXPR.getNodeName())) {
-                    JmmNode indexExpr = statement.getJmmChild(1);
-                    String methodI = get_Caller_method(statement);
-                    Type indexType = TypeUtils.getExprType(indexExpr, table, methodI);
-                    if (!indexType.getName().equals("int")) {
-                        addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(indexExpr), NodeUtils.getColumn(indexExpr),
-                                "Array index must be an integer"));
-                    }
-                }
-            }
-        }
 
         return null;
     }
@@ -879,8 +848,13 @@ public class Analyser extends AnalysisVisitor {
     private Void dealWithLength(JmmNode node, SymbolTable table) {
         String method = get_Caller_method(node);
         Type exprType = TypeUtils.getExprType(node.getJmmChild(0), table, method);
+        if(exprType == null){
+            addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
+                    "Invalid type for expression"));
+            return null;
+        }
 
-        if (exprType == null || exprType.getName() == null) {
+        if ( exprType.getName() == null) {
             addReport(new Report(ReportType.ERROR, Stage.SEMANTIC, NodeUtils.getLine(node), NodeUtils.getColumn(node),
                     "Invalid type for expression"));
             return null;

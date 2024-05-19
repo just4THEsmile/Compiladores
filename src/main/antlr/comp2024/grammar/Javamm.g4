@@ -125,7 +125,8 @@ stmt
     ;
 
 expr
-    : NOT expr #NotExpr //
+    : expr '.' 'length' #LengthExpr //
+    | NOT expr #NotExpr //
     | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
@@ -134,7 +135,6 @@ expr
     | value=INTEGER #IntegerLiteral //
     | name=(ID | 'main' |'length') #VarRefExpr //
     | LPAREN expr RPAREN #ParenExpr //
-    | expr '.' 'length' #LengthExpr //
     | expr '['expr']' #ArrayAccessExpr //
     | value = TRUE #BooleanLiteral //
     | value = FALSE #BooleanLiteral //

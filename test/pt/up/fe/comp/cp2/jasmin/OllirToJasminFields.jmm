@@ -16,6 +16,7 @@ class ArrayAsArg {
         c = new ArrayAsArg();
         a = new int[2];
         x = c.func(a);
+        (this).func(a);
         return x;
     }
 
