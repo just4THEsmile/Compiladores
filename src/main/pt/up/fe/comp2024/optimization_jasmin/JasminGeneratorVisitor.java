@@ -6,12 +6,14 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2024.ast.Kind;
 import pt.up.fe.comp2024.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.utilities.StringLines;
 import pt.up.fe.comp2024.symboltable.JmmSymbolTableBuilder;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -130,7 +132,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         for (var method : classDecl.getChildren()) {
             if(method.getKind().equals("VarDecl")){
                 continue;
-            }else{
+            }else{/*
                 if(method.get("name").equals(table.getClassName())){
                     code.append(".method public <init>()V").append(NL);
                     code.append(TAB).append("aload_0").append(NL);
@@ -143,7 +145,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
                     code.append(".end method").append(NL).append(NL);
                     found=true;
                     continue;
-                }
+                }*/
             }
             code.append(visit(method));
         }
@@ -213,8 +215,9 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     code.append(")V").append(NL);
     // Add limits
+        var test=getExtraRegisters(mainMethodDecl);
     code.append(TAB).append(".limit stack 99").append(NL);
-    code.append(TAB).append(".limit locals 99").append(NL);
+    code.append(TAB).append(".limit locals ").append((currentRegisters.size() + test)).append(NL);
 
 
     for (var stmt : mainMethodDecl.getChildren("Stmt")) {
@@ -308,9 +311,10 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
         code.append(")").append(get_parsed_class(getTypeReturnToStr(table.getReturnType(currentMethod)))).append(NL);
 
+        var test= getExtraRegisters(methodDecl);
         // Add limits
         code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB).append(".limit locals ").append((currentRegisters.size() +test+1)).append(NL);
 
         for (var stmt : methodDecl.getChildren("Stmt")) {
             // Get code for statement, split into lines and insert the necessary indentation
@@ -487,6 +491,44 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             }
         }
         return class_name;
+    }
+
+    //create a dfs to get the number of extra registers needed
+    private int getExtraRegisters(JmmNode node){
+        int extra=0;
+        if(node.getKind().equals("MemberCallExpr")) {
+            var CurrentMethod = get_Caller_method(node);
+
+            Type t1 = TypeUtils.getExprType(node.getJmmChild(0), table, CurrentMethod);
+            if (node.getJmmChild(0).getKind().equals("ThisRefExpr") || t1.getName().equals(table.getClassName())) {
+                var func = node.get("name");
+                List< Symbol> params =table.getParameters(func);
+                for(Symbol s : params) {
+                    if (s.getType().getName().equals("_varargs")) {
+                        extra++;
+                        extra++;
+                    }
+                }
+            }
+        }else if (node.getKind().equals("Array")){
+            extra++;
+            extra++;
+
+        }
+        for (var child : node.getChildren()) {
+            extra+=getExtraRegisters(child);
+        }
+        return extra;
+    }
+
+    private String get_Caller_method(JmmNode node){
+        while (!(node.getKind()).equals("MethodDecl") && !(node.getKind()).equals("MainMethodDecl")){
+            if(node.getParent()==null){
+                return null;
+            }
+            node=node.getParent();
+        }
+        return node.get("name");
     }
 
 

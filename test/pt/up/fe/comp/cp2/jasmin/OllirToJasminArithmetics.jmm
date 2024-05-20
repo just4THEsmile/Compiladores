@@ -1,21 +1,13 @@
-class Test {
+class MyClass {
+    int myVariable;
+
+    // Constructor
+    public int MyClass(int initialValue) {
+        myVariable = initialValue;
+        return 1;
+    }
+    public static void main(String[] args) {
+    }
 
 
-	public static void main(String[] args) {
-
-	}
-
-
-	public int foo() {
-	    int a;
-	    int b;
-	    int c;
-
-	    a = 1;
-	    b = 2;
-
-	    c = a + b;
-
-	    return c;
-	}
 }
