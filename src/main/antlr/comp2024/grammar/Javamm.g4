@@ -128,7 +128,7 @@ expr
     : expr '.' 'length' #LengthExpr //
     | NOT expr #NotExpr //
     | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
-    | funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
+    //| funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
     | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (AND|SMALLER) expr #BinaryExpr //

@@ -30,6 +30,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String currentMethod;
     private static int label_number=0;
     private int nextRegister;
+    private static int max_stack_size;
 
     private static Map<String, Integer> currentRegisters;
 
@@ -198,10 +199,11 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         currentRegisters.put(local.getName(), nextRegister);
         nextRegister++;
     }
-
+    max_stack_size=0;
     exprGenerator = new JasminExprGeneratorVisitor(currentRegisters,table,currentMethod);
 
     var code = new StringBuilder();
+    var stms = new StringBuilder();
 
     // calculate modifier
     var modifier = mainMethodDecl.getObject("isPublic", Boolean.class) ? "public " : "";
@@ -216,8 +218,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
     code.append(")V").append(NL);
     // Add limits
         var test=getExtraRegisters(mainMethodDecl);
-    code.append(TAB).append(".limit stack 99").append(NL);
-    code.append(TAB).append(".limit locals ").append((currentRegisters.size() + test)).append(NL);
+
 
 
     for (var stmt : mainMethodDecl.getChildren("Stmt")) {
@@ -225,13 +226,17 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         var instCode = StringLines.getLines(visit(stmt)).stream()
                 .collect(Collectors.joining(NL + TAB, TAB, NL));
 
-        code.append(instCode);
+        stms.append(instCode);
     }
+    code.append(TAB).append(".limit stack ").append(exprGenerator.get_max_stack_num()).append(NL);
+    code.append(TAB).append(".limit locals ").append((currentRegisters.size() + test)).append(NL);
+    code.append(stms);
     code.append(TAB).append("return").append(NL);
 
     code.append(".end method\n");
 
     // reset information
+    max_stack_size=0;
     exprGenerator = null;
     nextRegister = -1;
     currentRegisters = null;
@@ -283,10 +288,11 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             nextRegister++;
         }
 
-
+        max_stack_size=0;
         exprGenerator = new JasminExprGeneratorVisitor(currentRegisters,table,currentMethod);
 
         var code = new StringBuilder();
+        var stms = new StringBuilder();
 
         // calculate modifier
         var modifier = methodDecl.getObject("isPublic", Boolean.class) ? "public " : "";
@@ -313,23 +319,24 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         var test= getExtraRegisters(methodDecl);
         // Add limits
-        code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals ").append((currentRegisters.size() +test+1)).append(NL);
 
         for (var stmt : methodDecl.getChildren("Stmt")) {
             // Get code for statement, split into lines and insert the necessary indentation
             var instCode = StringLines.getLines(visit(stmt)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
-            code.append(instCode);
+            stms.append(instCode);
         }
+        code.append(TAB).append(".limit stack ").append(exprGenerator.get_max_stack_num()).append(NL);
+        code.append(TAB).append(".limit locals ").append((currentRegisters.size() +test+1)).append(NL);
+        code.append(stms);
         if (table.getReturnType(currentMethod).getName().equals("void")){
             code.append(TAB).append("return").append(NL);
         }
 
         code.append(".end method\n");
-
         // reset information
+        max_stack_size=0;
         exprGenerator = null;
         nextRegister = -1;
         currentRegisters = null;
@@ -357,6 +364,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             exprGenerator.visit(lhs.getJmmChild(1), code);
             exprGenerator.visit(assignStmt.getChild(1), code);
 
+            exprGenerator.sub_stack_size(1);
             code.append("iastore").append(NL);
             return code.toString();
         }
@@ -371,9 +379,11 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             var fieldType = table.getFields();
             for (Symbol field : fieldType) {
                 if (field.getName().equals(destName)) {
+                    exprGenerator.add_stack_size(1);
                     code.append("aload 0").append(NL);
                     exprGenerator.visit(assignStmt.getChild(1), code);
                     code.append("putfield ").append(table.getClassName()).append("/").append(destName).append(" ").append(getTypeToStr(field.getType())).append(NL);
+                    exprGenerator.sub_stack_size(1);
                     return code.toString();
                 }
             }
@@ -382,12 +392,15 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         exprGenerator.visit(assignStmt.getChild(1), code);
         Type t = TypeUtils.getVarExprType(assignStmt.getJmmChild(0),table,currentMethod);
         if (t.isArray()){
+            exprGenerator.sub_stack_size(1);
             code.append("astore ").append(reg).append(NL);
             return code.toString();
         }
         if (t.getName().equals("int") || t.getName().equals("boolean")) {
+            exprGenerator.sub_stack_size(1);
             code.append("istore ").append(reg).append(NL);
         }else{
+            exprGenerator.sub_stack_size(1);
             code.append("astore ").append(reg).append(NL);
         }
 
