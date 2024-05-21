@@ -4,7 +4,6 @@ class MyClass {
     // Constructor
     public int MyClass(int initialValue) {
         myVariable = initialValue;
-        MyClass;
         return 1;
     }
     public static void main(String[] args) {
