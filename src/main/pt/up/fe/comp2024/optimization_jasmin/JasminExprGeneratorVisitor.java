@@ -472,22 +472,27 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     }
 
-    private Boolean has_parent_stmt_pop_check(JmmNode node){
+    private Boolean has_parent_stmt_pop_check(JmmNode node) {
         var parent = node.getParent();
-        while (parent!=null && parent.getKind().equals("ParenExpr")){
+        while (parent != null && parent.getKind().equals("ParenExpr")) {
             parent = parent.getParent();
         }
-            if ( parent.getKind().equals("BlockStm") || parent.getKind().equals("ExprStmt")){
+        if (parent == null) {
+            return false;
+        }
+        switch (parent.getKind()) {
+            case "BlockStm":
+            case "ExprStmt":
                 return true;
-            }else if ( parent.getKind().equals("IfStmt") || parent.getKind().equals("WhileStmt") ){
-                if(parent.getJmmChild(0).equals(node)){
-                    return false;
-                }
-                return true;
-            }else{
+            case "IfStmt":
+            case "WhileStmt":
+                // Verifica se o nó dado é o primeiro filho do IfStmt ou do WhileStmt
+                return !parent.getJmmChild(0).equals(node);
+            default:
                 return false;
-            }
+        }
     }
+
 
 
 }
