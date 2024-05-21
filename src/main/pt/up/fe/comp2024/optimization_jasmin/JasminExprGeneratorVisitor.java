@@ -254,8 +254,9 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 }
                 code.append(NL);
 
-
-
+                if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                    code.append("pop" + NL);
+                }
 
                 return null;
             }
@@ -274,6 +275,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 code.append("V").append(NL);
             }
             code.append(NL);
+
+            if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                code.append("pop" + NL);
+            }
+
             return null;
         }else{
             if(memberCallExpr.getNumChildren() == 1) {
@@ -287,6 +293,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                     code.append("V").append(NL);
                 }
                 code.append(NL);
+
+                if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
+                    code.append("pop" + NL);
+                }
 
                 return null;
             }
