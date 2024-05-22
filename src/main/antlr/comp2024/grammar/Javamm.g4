@@ -116,10 +116,10 @@ param
     ;
 
 stmt
-    : expr EQUALS expr SEMI #AssignStmt //
-    | RETURN expr SEMI #ReturnStmt
+    : RETURN expr SEMI #ReturnStmt
     | LCURLY stmt* RCURLY #BlockStmt //
     | expr SEMI #ExprStmt //
+    |expr EQUALS expr SEMI #AssignStmt //
     | WHILE LPAREN expr RPAREN stmt #WhileStmt //
     | IF LPAREN expr RPAREN stmt ELSE stmt #IfStmt //
     ;
@@ -127,21 +127,22 @@ stmt
 expr
     : expr '.' 'length' #LengthExpr //
     | NOT expr #NotExpr //
+    | 'this' #ThisRefExpr //
+    | value = TRUE #BooleanLiteral //
+    | name=(ID | 'main' |'length') #VarRefExpr //
+    | value = FALSE #BooleanLiteral //
+    | value=INTEGER #IntegerLiteral //
+    | expr '['expr']' #ArrayAccessExpr //
+    | '[' (expr (COMMA expr)*)? ']' #Array //
+    | LPAREN expr RPAREN #ParenExpr //
     | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     //| funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
     | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (AND|SMALLER) expr #BinaryExpr //
-    | value=INTEGER #IntegerLiteral //
-    | name=(ID | 'main' |'length') #VarRefExpr //
-    | LPAREN expr RPAREN #ParenExpr //
-    | expr '['expr']' #ArrayAccessExpr //
-    | value = TRUE #BooleanLiteral //
-    | value = FALSE #BooleanLiteral //
     | NEW name=(ID | 'main'| INT | BOOLEAN) '['expr']' #NewIntArray //
     | NEW classname=(ID | 'main') '('(expr (COMMA expr)*)?')' #NewObject //
-    | '[' (expr (COMMA expr)*)? ']' #Array //
-    | 'this' #ThisRefExpr //
+
     ;
 
 
