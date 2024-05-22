@@ -380,7 +380,7 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
             for (Symbol field : fieldType) {
                 if (field.getName().equals(destName)) {
                     exprGenerator.add_stack_size(1);
-                    code.append("aload 0").append(NL);
+                    code.append("aload_0").append(NL);
                     exprGenerator.visit(assignStmt.getChild(1), code);
                     code.append("putfield ").append(table.getClassName()).append("/").append(destName).append(" ").append(getTypeToStr(field.getType())).append(NL);
                     exprGenerator.sub_stack_size(1);
@@ -393,15 +393,15 @@ public class JasminGeneratorVisitor extends AJmmVisitor<Void, String> {
         Type t = TypeUtils.getVarExprType(assignStmt.getJmmChild(0),table,currentMethod);
         if (t.isArray()){
             exprGenerator.sub_stack_size(1);
-            code.append("astore ").append(reg).append(NL);
+            code.append("astore").append(exprGenerator.parse_with_under(reg)).append(NL);
             return code.toString();
         }
         if (t.getName().equals("int") || t.getName().equals("boolean")) {
             exprGenerator.sub_stack_size(1);
-            code.append("istore ").append(reg).append(NL);
+            code.append("istore").append(exprGenerator.parse_with_under(reg)).append(NL);
         }else{
             exprGenerator.sub_stack_size(1);
-            code.append("astore ").append(reg).append(NL);
+            code.append("astore").append(exprGenerator.parse_with_under(reg)).append(NL);
         }
 
         return code.toString();

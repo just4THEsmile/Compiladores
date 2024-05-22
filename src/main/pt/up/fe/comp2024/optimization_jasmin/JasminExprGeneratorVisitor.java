@@ -60,22 +60,22 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         max_reg_val++;
         max_reg_val++;
         add_stack_size(1);
-        code.append("ldc " + array.getChildren().size() + NL); // size of array
+        code.append(optimized_literal(array.getChildren().size()) + NL); // size of array
         code.append("newarray int" + NL);
-        code.append("astore " + num_of_reg + NL);
+        code.append("astore" + parse_with_under(num_of_reg) + NL);
 
         for (int i = array.getChildren().size()-1; i>=0; i--) {
             add_stack_size(1); // TODO : NOT sure
             // remove the top value to put the index then add it again
-            code.append("istore "+(num_of_reg+1)).append(NL);
-            code.append("aload "+num_of_reg).append(NL);
-            code.append("ldc "+i).append(NL);
-            code.append("iload "+(num_of_reg+1)).append(NL);
+            code.append("istore"+parse_with_under(num_of_reg+1)).append(NL);
+            code.append("aload"+parse_with_under(num_of_reg)).append(NL);
+            code.append(optimized_literal(i)).append(NL);
+            code.append("iload"+parse_with_under(num_of_reg+1)).append(NL);
             code.append("iastore" + NL).append(NL);
             sub_stack_size(1);
         }
         sub_stack_size(array.getChildren().size());
-        code.append("aload "+num_of_reg).append(NL);
+        code.append("aload"+parse_with_under(num_of_reg)).append(NL);
 
         if(has_parent_stmt_pop_check(array)){
             sub_stack_size(1);
@@ -108,7 +108,18 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     private Void visitIntegerLiteral(JmmNode integerLiteral, StringBuilder code) {
         add_stack_size(1);
-        code.append("ldc " + integerLiteral.get("value") + NL);
+        int value = Integer.valueOf(integerLiteral.get("value"));
+        if(value>=0 && value<=5){
+            code.append("iconst_" + value + NL);
+        } else if (value >= -128 && value <= 127) {
+            code.append("bipush " + value + NL);
+        } else if (value >= -32768 && value <= 32767) {
+            code.append("sipush " + value + NL);
+        } else {
+            code.append("ldc " + value + NL);
+
+        }
+
         if(has_parent_stmt_pop_check(integerLiteral)){
             sub_stack_size(1);
             code.append("pop" + NL);
@@ -129,9 +140,9 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     private Void visitBooleanLiteral(JmmNode booleanLiteral, StringBuilder code) {
         add_stack_size(1);
         if (booleanLiteral.get("value").equals("true"))
-            code.append("ldc " + "1" + NL);
+            code.append("iconst_1" + NL);
         else
-            code.append("ldc " + "0" + NL);
+            code.append("iconst_0" + NL);
         if(has_parent_stmt_pop_check(booleanLiteral)){
             sub_stack_size(1);
             code.append("pop" + NL);
@@ -140,7 +151,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
     private Void visitThisRefExpr(JmmNode thisRefExpr, StringBuilder code) {
         add_stack_size(1);
-        code.append("aload 0" + NL);
+        code.append("aload_0" + NL);
         if(has_parent_stmt_pop_check(thisRefExpr)){
             sub_stack_size(1);
             code.append("pop" + NL);
@@ -172,7 +183,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         if(reg==null){
             for (var field : fields) {
                 if (field.getName().equals(name)) {
-                    code.append("aload 0" + NL);
+                    code.append("aload_0" + NL);
                     code.append("getfield " + table.getClassName() + "/" + name+" " + getTypeToStr(field.getType()) + NL);
 
                     if(has_parent_stmt_pop_check(varRefExpr)){
@@ -188,8 +199,8 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         SpecsCheck.checkNotNull(reg, () -> "No register mapped for variable '" + name + "'");
 
         if (t.isArray()){
-            code.append("aload ");
-            code.append(currentRegisters.get(name) + NL);
+            code.append("aload");
+            code.append(parse_with_under(currentRegisters.get(name)) + NL);
             if(has_parent_stmt_pop_check(varRefExpr)){
                 sub_stack_size(1);
                 code.append("pop" + NL);
@@ -199,16 +210,16 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         }
         switch (t.getName()) {
             case "int","boolean" :
-                code.append("iload ");
-                code.append(currentRegisters.get(name) + NL);
+                code.append("iload");
+                code.append(parse_with_under(currentRegisters.get(name)) + NL);
                 if(has_parent_stmt_pop_check(varRefExpr)){
                     sub_stack_size(1);
                     code.append("pop" + NL);
                 }
                 break;
             default :
-                code.append("aload ");
-                code.append(currentRegisters.get(name) + NL);
+                code.append("aload");
+                code.append(parse_with_under(currentRegisters.get(name)) + NL);
                 if(has_parent_stmt_pop_check(varRefExpr)){
                     sub_stack_size(1);
                     code.append("pop" + NL);
@@ -306,21 +317,21 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                         int non_var_args = params.size()-1;
                         int varg_args_num = memberCallExpr.getNumChildren()-1-non_var_args;
                         add_stack_size(1);
-                        code.append("ldc " + varg_args_num + NL);
+                        code.append(optimized_literal(varg_args_num) + NL);
                         code.append("newarray int" + NL);
-                        code.append("astore " + num_of_reg + NL);
+                        code.append("astore" + parse_with_under(num_of_reg) + NL);
                         for (int i=varg_args_num-1;i>=0;i--){
                             add_stack_size(1);
                             // remove the top value to put the index then add it again
-                            code.append("istore "+(num_of_reg+1)).append(NL);
-                            code.append("aload "+num_of_reg).append(NL);
-                            code.append("ldc "+i).append(NL);
-                            code.append("iload "+(num_of_reg+1)).append(NL);
+                            code.append("istore"+parse_with_under(num_of_reg+1)).append(NL);
+                            code.append("aload"+parse_with_under(num_of_reg)).append(NL);
+                            code.append(optimized_literal(i)).append(NL);
+                            code.append("iload"+parse_with_under(num_of_reg+1)).append(NL);
                             code.append("iastore" + NL).append(NL);
                             sub_stack_size(1);
                         }
                         sub_stack_size(varg_args_num);
-                        code.append("aload "+num_of_reg).append(NL);
+                        code.append("aload"+parse_with_under(num_of_reg)).append(NL);
                     }
                 }
             }
@@ -392,21 +403,21 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                         int non_var_args = params.size()-1;
                         int varg_args_num = memberCallExpr.getNumChildren()-1-non_var_args;
                         add_stack_size(1);
-                        code.append("ldc " + varg_args_num + NL);
+                        code.append(optimized_literal(varg_args_num) + NL);
                         code.append("newarray int" + NL);
-                        code.append("astore " + num_of_reg + NL);
+                        code.append("astore" + parse_with_under(num_of_reg) + NL);
                         for (int i=varg_args_num-1;i>=0;i--){
                             add_stack_size(1);
                             // remove the top value to put the index then add it again
-                            code.append("istore "+(num_of_reg+1)).append(NL);
-                            code.append("aload "+num_of_reg).append(NL);
-                            code.append("ldc "+i).append(NL);
-                            code.append("iload "+(num_of_reg+1)).append(NL);
+                            code.append("istore"+parse_with_under(num_of_reg+1)).append(NL);
+                            code.append("aload"+parse_with_under(num_of_reg)).append(NL);
+                            code.append(optimized_literal(i)).append(NL);
+                            code.append("iload"+parse_with_under(num_of_reg+1)).append(NL);
                             code.append("iastore" + NL).append(NL);
                             sub_stack_size(1);
                         }
                         sub_stack_size(varg_args_num);
-                        code.append("aload "+num_of_reg).append(NL);
+                        code.append("aload"+parse_with_under(num_of_reg)).append(NL);
                     }
                 }
                 sub_stack_size(1);
@@ -490,7 +501,7 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
         if (children.isEmpty()) {
             add_stack_size(1);
-            code.append("aload 0" + NL);
+            code.append("aload_0" + NL);
             sub_stack_size(1);
             code.append("invokevirtual " + className + "/" + methodName + "()");
             code.append(getTypeReturnToStr(table.getReturnType(methodName)));
@@ -508,11 +519,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         max_reg_val+=children.size();
 
         for(int i = children.size(); i>0; i--){
-            code.append("astore " + (i+num_of_reg) + NL);
+            code.append("astore" + parse_with_under(i+num_of_reg) + NL);
         }
-        code.append("aload 0" + NL);
+        code.append("aload_0" + NL);
         for(int i = 0; i<children.size(); i++){
-            code.append("iload " + num_of_reg + NL);
+            code.append("iload" + parse_with_under(num_of_reg) + NL);
             num_of_reg++;
         }
 
@@ -633,6 +644,27 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
 
     public int get_max_stack_num(){
         return max_stack_num;
+    }
+
+    public String parse_with_under(int i){
+        if(i>=4){
+            return " "+i;
+        }else{
+            return "_"+i;
+        }
+    }
+
+    public String optimized_literal(int value){
+        if(value>=0 && value<=5){
+            return "iconst_" + value + NL;
+        } else if (value >= -128 && value <= 127) {
+            return "bipush " + value + NL;
+        } else if (value >= -32768 && value <= 32767) {
+            return "sipush " + value + NL;
+        } else {
+            return "ldc " + value + NL;
+
+        }
     }
 
 
