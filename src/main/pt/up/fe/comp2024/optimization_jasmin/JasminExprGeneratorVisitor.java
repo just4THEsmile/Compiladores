@@ -107,8 +107,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
 
     private Void visitIntegerLiteral(JmmNode integerLiteral, StringBuilder code) {
-        add_stack_size(1);
+        if(has_add_parent(integerLiteral)){
+            return null;
+        }
         int value = Integer.valueOf(integerLiteral.get("value"));
+        add_stack_size(1);
         if(value>=0 && value<=5){
             code.append("iconst_" + value + NL);
         } else if (value >= -128 && value <= 127) {
@@ -160,6 +163,9 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
     }
 
     private Void visitVarRefExpr(JmmNode varRefExpr, StringBuilder code) {
+        if(has_add_parent(varRefExpr)){
+            return null;
+        }
         add_stack_size(1);
         String name = varRefExpr.get("name");
         var fields = table.getFields();
@@ -238,9 +244,11 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
         // we can assume the value for the operation are already loaded in the stack
 
         // get the operation
-        sub_stack_size(1);
+        if(!binaryExpr.get("op").equals("+") ){
+            sub_stack_size(1);
+        }
         var op = switch (binaryExpr.get("op")) {
-            case "+" -> "iadd";
+            case "+" -> add_optimization(binaryExpr);
             case "*" -> "imul";
             case "-" -> "isub";
             case "/" -> "idiv";
@@ -309,29 +317,37 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             String static_class= t.getName().substring(0, t.getName().length()-1);
             if( static_class==table.getClassName()){
                 List< Symbol> params =table.getParameters(methodName);
-                for(Symbol s : params){
-                    if (s.getType().getName().equals("_varargs")){
-                        int num_of_reg = max_reg_val;
-                        max_reg_val++;
-                        max_reg_val++;
-                        int non_var_args = params.size()-1;
-                        int varg_args_num = memberCallExpr.getNumChildren()-1-non_var_args;
-                        add_stack_size(1);
-                        code.append(optimized_literal(varg_args_num) + NL);
-                        code.append("newarray int" + NL);
-                        code.append("astore" + parse_with_under(num_of_reg) + NL);
-                        for (int i=varg_args_num-1;i>=0;i--){
+                if(params==null){
+                    //Do nothing
+                }else if(params.isEmpty()){
+                    //Do nothing
+                }else {
+
+
+                    for (Symbol s : params) {
+                        if (s.getType().getName().equals("_varargs")) {
+                            int num_of_reg = max_reg_val;
+                            max_reg_val++;
+                            max_reg_val++;
+                            int non_var_args = params.size() - 1;
+                            int varg_args_num = memberCallExpr.getNumChildren() - 1 - non_var_args;
                             add_stack_size(1);
-                            // remove the top value to put the index then add it again
-                            code.append("istore"+parse_with_under(num_of_reg+1)).append(NL);
-                            code.append("aload"+parse_with_under(num_of_reg)).append(NL);
-                            code.append(optimized_literal(i)).append(NL);
-                            code.append("iload"+parse_with_under(num_of_reg+1)).append(NL);
-                            code.append("iastore" + NL).append(NL);
-                            sub_stack_size(1);
+                            code.append(optimized_literal(varg_args_num) + NL);
+                            code.append("newarray int" + NL);
+                            code.append("astore" + parse_with_under(num_of_reg) + NL);
+                            for (int i = varg_args_num - 1; i >= 0; i--) {
+                                add_stack_size(1);
+                                // remove the top value to put the index then add it again
+                                code.append("istore" + parse_with_under(num_of_reg + 1)).append(NL);
+                                code.append("aload" + parse_with_under(num_of_reg)).append(NL);
+                                code.append(optimized_literal(i)).append(NL);
+                                code.append("iload" + parse_with_under(num_of_reg + 1)).append(NL);
+                                code.append("iastore" + NL).append(NL);
+                                sub_stack_size(1);
+                            }
+                            sub_stack_size(varg_args_num);
+                            code.append("aload" + parse_with_under(num_of_reg)).append(NL);
                         }
-                        sub_stack_size(varg_args_num);
-                        code.append("aload"+parse_with_under(num_of_reg)).append(NL);
                     }
                 }
             }
@@ -379,8 +395,10 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 if (className.equals(table.getClassName())) {
                     var test= table.getReturnType(methodName);
                     code.append(getTypeReturnToStr(table.getReturnType(methodName))).append(NL);
+                    add_stack_size(1);
                     if(has_parent_stmt_pop_check( memberCallExpr) && !getTypeReturnToStr(table.getReturnType(methodName)).equals("V")){
                         code.append("pop" + NL);
+                        sub_stack_size(1);
                     }
                 }else if(has_ancertor_assign(memberCallExpr)!=null){
                     code.append(getTypeToStr(has_ancertor_assign(memberCallExpr)));
@@ -629,6 +647,21 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
                 return false;
             }
     }
+
+    private Boolean has_add_parent(JmmNode node){
+        var parent = node.getParent();
+        if(parent==null){
+            return false;
+        }
+        while (parent!=null && parent.getKind().equals("ParenExpr")){
+            parent = parent.getParent();
+        }
+        if ( parent.getKind().equals("BinaryExpr") ){
+            return parent.get("op").equals("+");
+        }else{
+            return false;
+        }
+    }
     public Void add_stack_size(int size){
         stack_size+=size;
         if(stack_size>max_stack_num){
@@ -665,6 +698,219 @@ public class JasminExprGeneratorVisitor extends PostorderJmmVisitor<StringBuilde
             return "ldc " + value + NL;
 
         }
+    }
+
+    public String add_optimization(JmmNode node){
+        var lft=node.getChildren().get(0);
+        var rgt=node.getChildren().get(1);
+        StringBuilder s=new StringBuilder();
+        if(lft==null || rgt==null){
+            return s.toString();
+        }
+        while(lft.getKind().equals("ParenExpr")){
+            lft=lft.getChildren().get(0);
+        }
+        while(rgt.getKind().equals("ParenExpr")){
+            rgt=rgt.getChildren().get(0);
+        }
+        if(lft.getKind().equals("IntegerLiteral") && rgt.getKind().equals("IntegerLiteral")){
+            add_stack_size(1);
+            s.append(optimized_literal(Integer.valueOf(lft.get("value"))+Integer.valueOf(rgt.get("value")))).append(NL);
+            return s.toString();
+        }
+        if(lft.getKind().equals("IntegerLiteral") && rgt.getKind().equals("VarRefExpr")){
+            var fields = table.getFields();
+            String var_name=rgt.get("name");
+            var reg_num=currentRegisters.get(var_name);
+            String val=lft.get("value");
+            int int_val=Integer.valueOf(val);
+
+            if((reg_num==null)){
+                for (var field : fields) {
+                    if (field.getName().equals(var_name)) {
+                        add_stack_size(2);
+                        s.append("aload_0" + NL);
+                        s.append("getfield " + table.getClassName() + "/" + var_name+" " + getTypeToStr(field.getType()) + NL);
+                        s.append(optimized_literal(int_val)).append(NL);
+                        s.append("iadd").append(NL);
+                        sub_stack_size(1);
+                        return s.toString();
+                    }
+                }
+            }
+            if(int_val>=-128 && int_val<=127){
+                add_stack_size(1);
+                s.append("iinc ").append(reg_num).append(" ").append(int_val).append(NL);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+            }else{
+                add_stack_size(2);
+                s.append(optimized_literal(int_val)).append(NL);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+                s.append("iadd").append(NL);
+                sub_stack_size(1);
+            }
+            return s.toString();
+        }
+        if(rgt.getKind().equals("IntegerLiteral") && lft.getKind().equals("VarRefExpr")){
+            String var_name=lft.get("name");
+            var fields= table.getFields();
+            var reg_num=currentRegisters.get(var_name);
+            String val=rgt.get("value");
+            int int_val=Integer.valueOf(val);
+            if((reg_num==null)){
+                for (var field : fields) {
+                    if (field.getName().equals(var_name)) {
+                        add_stack_size(2);
+                        s.append("aload_0" + NL);
+                        s.append("getfield " + table.getClassName() + "/" + var_name+" " + getTypeToStr(field.getType()) + NL);
+                        s.append(optimized_literal(int_val)).append(NL);
+                        s.append("iadd").append(NL);
+                        sub_stack_size(1);
+                        return s.toString();
+                    }
+                }
+            }
+            if(int_val>=-128 && int_val<=127){
+                add_stack_size(1);
+                s.append("iinc ").append(reg_num).append(" ").append(int_val).append(NL);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+            }else{
+                add_stack_size(2);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+                s.append(optimized_literal(int_val)).append(NL);
+                s.append("iadd").append(NL);
+                sub_stack_size(1);
+            }
+            return s.toString();
+        }
+        if(lft.getKind().equals("VarRefExpr") && rgt.getKind().equals("VarRefExpr")){
+
+            String var_name1=lft.get("name");
+            String var_name2=rgt.get("name");
+            var fields= table.getFields();
+            var reg_num1=currentRegisters.get(var_name1);
+            var reg_num2=currentRegisters.get(var_name2);
+            if((reg_num1==null)){
+                for (var field : fields) {
+                    if (field.getName().equals(var_name1)) {
+                        if((reg_num2==null)){
+                            for (var field2 : fields) {
+                                if (field2.getName().equals(var_name2)) {
+                                    add_stack_size(2);
+                                    s.append("aload_0" + NL);
+                                    s.append("getfield " + table.getClassName() + "/" + var_name1+" " + getTypeToStr(field.getType()) + NL);
+                                    s.append("aload_0" + NL);
+                                    s.append("getfield " + table.getClassName() + "/" + var_name2+" " + getTypeToStr(field2.getType()) + NL);
+                                    s.append("iadd").append(NL);
+                                    sub_stack_size(1);
+                                    return s.toString();
+                                }
+                            }
+                        }else{
+                            add_stack_size(2);
+                            s.append("aload_0" + NL);
+                            s.append("getfield " + table.getClassName() + "/" + var_name1+" " + getTypeToStr(field.getType()) + NL);
+                            s.append("iload").append(parse_with_under(reg_num2)).append(NL);
+                            s.append("iadd").append(NL);
+                            sub_stack_size(1);
+                            return s.toString();
+                        }
+                    }
+                }
+            }else{
+                if ((reg_num2 == null)) {
+                    for (var field : fields) {
+                        if (field.getName().equals(var_name2)) {
+                            add_stack_size(1);
+                            s.append("iload").append(parse_with_under(reg_num1)).append(NL);
+                            s.append("aload_0" + NL);
+                            s.append("getfield " + table.getClassName() + "/" + var_name2 + " " + getTypeToStr(field.getType()) + NL);
+                            s.append("iadd").append(NL);
+                            sub_stack_size(1);
+                            return s.toString();
+                        }
+                    }
+                } else {
+                    add_stack_size(2);
+                    s.append("iload").append(parse_with_under(reg_num1)).append(NL);
+                    s.append("iload").append(parse_with_under(reg_num2)).append(NL);
+                    s.append("iadd").append(NL);
+                    sub_stack_size(1);
+                    return s.toString();
+                }
+            }
+
+        }
+        if(lft.getKind().equals("VarRefExpr")){
+            String var_name=lft.get("name");
+            var fields= table.getFields();
+            var reg_num=currentRegisters.get(var_name);
+            if((reg_num==null)){
+                for (var field : fields) {
+                    if (field.getName().equals(var_name)) {
+                        add_stack_size(1);
+                        s.append("aload_0" + NL);
+                        s.append("getfield " + table.getClassName() + "/" + var_name+" " + getTypeToStr(field.getType()) + NL);
+                        s.append("iadd").append(NL);
+                        sub_stack_size(1);
+                        return s.toString();
+                    }
+                }
+            }else{
+                add_stack_size(1);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+                s.append("iadd").append(NL);
+                sub_stack_size(1);
+                return s.toString();
+            }
+        }
+        if(rgt.getKind().equals("VarRefExpr")){
+            String var_name=rgt.get("name");
+            var fields= table.getFields();
+            var reg_num=currentRegisters.get(var_name);
+            if((reg_num==null)){
+                for (var field : fields) {
+                    if (field.getName().equals(var_name)) {
+                        add_stack_size(1);
+                        s.append("aload_0" + NL);
+                        s.append("getfield " + table.getClassName() + "/" + var_name+" " + getTypeToStr(field.getType()) + NL);
+                        s.append("iadd").append(NL);
+                        sub_stack_size(1);
+                        return s.toString();
+                    }
+                }
+            }else{
+                add_stack_size(1);
+                s.append("iload").append(parse_with_under(reg_num)).append(NL);
+                s.append("iadd").append(NL);
+                sub_stack_size(1);
+                return s.toString();
+            }
+        }
+        if(lft.getKind().equals("IntegerLiteral")){
+            String val=lft.get("value");
+            int int_val=Integer.valueOf(val);
+
+            add_stack_size(1);
+            s.append(optimized_literal(int_val)).append(NL);
+            s.append("iadd").append(NL);
+            sub_stack_size(1);
+            return s.toString();
+
+        }
+        if(rgt.getKind().equals("IntegerLiteral")){
+            String val=rgt.get("value");
+            int int_val=Integer.valueOf(val);
+
+            add_stack_size(1);
+            s.append(optimized_literal(int_val)).append(NL);
+            s.append("iadd").append(NL);
+            sub_stack_size(1);
+            return s.toString();
+        }
+        sub_stack_size(1);
+        s.append("iadd").append(NL);
+        return s.toString();
     }
 
 
