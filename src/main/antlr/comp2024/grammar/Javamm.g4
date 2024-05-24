@@ -137,10 +137,9 @@ expr
     | LPAREN expr RPAREN #ParenExpr //
     | expr ('.' name=ID LPAREN (expr (COMMA expr)*)? RPAREN) #MemberCallExpr //
     //| funcname=ID LPAREN (expr (COMMA expr)*)? RPAREN #MethodCallExpr //
-    | expr op= (ADD | SUB) expr #BinaryExpr //
     | expr op= (MUL | DIV) expr #BinaryExpr //
-    | expr op= SMALLER expr #BinaryExpr //
-    | expr op= AND expr #BinaryExpr //
+    | expr op= (ADD | SUB) expr #BinaryExpr //
+    | expr op= (AND|SMALLER) expr #BinaryExpr //
     | NEW name=(ID | 'main'| INT | BOOLEAN) '['expr']' #NewIntArray //
     | NEW classname=(ID | 'main') '('(expr (COMMA expr)*)?')' #NewObject //
 
